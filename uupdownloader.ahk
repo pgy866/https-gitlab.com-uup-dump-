@@ -12,11 +12,11 @@ Execution_Level=4
 Set_Version_Info=1
 Company_Name=UUP dump authors
 File_Description=UUP dump downloader
-File_Version=0.1.0.0
+File_Version=0.1.1.0
 Inc_File_Version=0
 Legal_Copyright=(c) 2018 UUP dump downloader
 Product_Name=UUP dump downloader
-Product_Version=0.1.0.0
+Product_Version=0.1.1.0
 [ICONS]
 Icon_1=%In_Dir%\files\icon1.ico
 Icon_2=0
@@ -35,8 +35,20 @@ SetBatchLines -1
 #NoTrayIcon
 #SingleInstance off
 
-Version = 0.1.0-alpha
+Version = 0.1.1-alpha
 AppName = UUP dump downloader v%version%
+
+if A_IsAdmin = 0
+{
+    MsgBox, 16, %AppName%, This application needs to be run as administrator.
+    ExitApp
+}
+
+if A_OSVersion in WIN_NT4,WIN_95,WIN_98,WIN_ME,WIN_2000,WIN_XP,WIN_2003,WIN_VISTA
+{
+    MsgBox, 16, %AppName%, This application requires Windows 7 or later.
+    ExitApp
+}
 
 Instruction := "Preview version warning"
 Content := "This is a preview version of " AppName ".`n`nThis means that this application may work incorrectly, cause unknown problems or even remove files. YOU HAVE BEEN WARNED.`n`nDo you want to continue?"

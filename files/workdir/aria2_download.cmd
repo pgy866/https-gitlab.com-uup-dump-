@@ -1,27 +1,6 @@
 @echo off
 cd /d "%~dp0"
 
-if NOT "%cd%"=="%cd: =%" (
-    echo Current directory contains spaces in its path.
-    echo Please move or rename the directory to one not containing spaces.
-    echo.
-    pause
-    exit /b 1
-    goto :EOF
-)
-
-NET SESSION >NUL 2>&1
-IF %ERRORLEVEL% EQU 0 goto :START_PROCESS
-
-echo =====================================================
-echo This script needs to be executed as an administrator.
-echo =====================================================
-echo.
-pause
-exit /b 1
-goto :EOF
-
-:START_PROCESS
 set "aria2=files\aria2c.exe"
 set "a7z=files\7za.exe"
 set "aria2Script=files\aria2_script.txt"
