@@ -1,0 +1,461 @@
+﻿/*
+ * * * Compile_AHK SETTINGS BEGIN * * *
+
+[AHK2EXE]
+Exe_File=%In_Dir%\uupdownloader.exe
+Alt_Bin=C:\Program Files\AutoHotkey\Compiler\Unicode 32-bit.bin
+No_UPX=1
+Run_Before="build\prepare.cmd"
+Run_After="build\clean.cmd"
+Execution_Level=4
+[VERSION]
+Set_Version_Info=1
+Company_Name=UUP dump authors
+File_Description=UUP dump downloader
+File_Version=0.1.0.0
+Inc_File_Version=0
+Legal_Copyright=(c) 2018 UUP dump downloader
+Product_Name=UUP dump downloader
+Product_Version=0.1.0.0
+[ICONS]
+Icon_1=%In_Dir%\files\icon1.ico
+Icon_2=0
+Icon_3=0
+Icon_4=0
+Icon_5=0
+
+* * * Compile_AHK SETTINGS END * * *
+*/
+
+#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
+; #Warn  ; Enable warnings to assist with detecting common errors.
+SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
+SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
+SetBatchLines -1
+#NoTrayIcon
+#SingleInstance off
+
+Version = 0.1.0-alpha
+AppName = UUP dump downloader v%version%
+
+Instruction := "Preview version warning"
+Content := "This is a preview version of " AppName ".`n`nThis means that this application may work incorrectly, cause unknown problems or even remove files. YOU HAVE BEEN WARNED.`n`nDo you want to continue?"
+
+Result := TaskDialog(Instruction, Content, AppName, 0x6, 0xFFFA)
+
+if(Result == "No") {
+    ExitApp
+}
+
+Result =
+Instruction =
+Content = 
+
+SplitPath, A_ScriptFullPath,,,,, ScriptDrive
+BaseDir = %ScriptDrive%\$UUPDUMP
+
+Loop {
+	Random, instance, 0, 2147483647
+	WorkDir = %BaseDir%\%instance%
+} until !FileExist(WorkDir)
+
+FileCreateDir, %WorkDir%
+FileSetAttrib, +H, %BaseDir%
+	
+IfNotExist, %WorkDir%
+{
+	MsgBox, 16, Error, Failed to create working directory.
+	ExitApp
+}
+
+Gui Font, s9, Segoe UI
+Gui Font
+Gui Font, s16, Segoe UI
+Gui Add, Text, x16 y13 w480 h32 +0x200 +Center, %AppName%
+Gui Font
+Gui Font, s9, Segoe UI
+Gui Add, DropDownList, x24 y85 w396 +AltSubmit +Disabled gShowBuildToolTip vBuildSelect,
+Gui Add, Button, x428 y84 w60 h25 +Disabled gBuildSelectOK vBuildSelectBtn, &OK
+Gui Add, Text, x24 y152 w224 h23, Language
+Gui Add, DropDownList, x24 y175 w224 +AltSubmit +Disabled vLangSelect gLangSelected
+Gui Add, Text, x264 y152 w224 h23, Edition
+Gui Add, DropDownList, x264 y175 w224 +AltSubmit +Disabled vEditionSelect gEditionSelected
+Gui Add, GroupBox, x16 y60 w480 h60, Build selection
+Gui Add, GroupBox, x16 y132 w480 h80, Language and edition
+Gui Add, GroupBox, x16 y226 w480 h60, Save in
+Gui Add, Edit, x24 y251 w376 h22 vDestinationLocation, %A_ScriptDir%
+Gui Add, Button, x408 y250 w80 h24 gFindFolder, &Browse...
+Gui Add, Custom, x16 y302 w480 h58 ClassButton +0x200E gStartProcess vStartProcessBtn +Disabled, &Start process`nDownloads selected build and creates ISO image from it
+
+Gui, +Disabled
+Gui Show, w512 h376, %AppName%
+Gosub, PrepareEnv
+Gui, -Disabled
+Return
+
+PrepareEnv:
+    SetWorkingDir %WorkDir%
+
+    FileCreateDir, files
+    Progress, 0 WM400 C00 ZH16 AM R0-10001, , Preparing working directory..., Please wait..., Segoe UI
+    FileInstall, files\7za.exe, %WorkDir%\files\7za.exe
+    FileInstall, files\workdir.7z, %WorkDir%\workdir.7z
+    FileInstall, files\converter.7z, %WorkDir%\converter.7z
+    RunWait, files\7za.exe x workdir.7z, , Hide
+    RunWait, files\7za.exe x converter.7z, , Hide
+    FileDelete, workdir.7z
+    FileDelete, converter.7z
+
+    RunWait, cmd /c files\php\php.exe -c files\php\php.ini -r "echo 'PHPTESTSUCCESS';" >phptest.txt, , Hide
+    FileRead, PHPTEST, phptest.txt
+
+    if(PHPTEST != "PHPTESTSUCCESS")
+    {
+        MsgBox, 16, Error, 
+(
+PHP backend test failed. Without this backend working this application cannot continue to operate.
+
+What does this mean?
+ - You don't have Visual C++ Redistributable 2015 x86 installed
+ - Your antivirus is interfering with the process
+
+If problem persists:
+ - Install Visual C++ Redistributable 2015 x86
+ - Please disable your antivirus solution temporarily
+
+The application will close.
+)
+
+        gosub, KillApplication
+    }
+
+    FileDelete, phptest.txt
+
+    Progress, 1001
+    Progress, 1000, , Retrieving API...
+    Sleep, 1
+
+    URLDownloadToFile, https://gitlab.com/uup-dump/api/-/archive/master/api-master.zip, api.zip
+    RunWait, files\7za.exe x api.zip, , Hide
+    FileMoveDir, api-master, src\api
+    FileDelete, api.zip
+    Progress, 6001
+    Progress, 6000, , Retrieving list of builds...
+    Sleep, 1
+
+    URLDownloadToFile, https://uupdump.ml/listid.php, files\ids.txt
+    Progress, 10001
+    Progress, 10000
+
+    BuildIDs := PopulateBuildList()
+    GuiControl Enable, BuildSelect
+    GuiControl Enable, BuildSelectBtn
+
+    Progress, Off
+Return
+
+BuildSelectOK:
+    Gui Submit, NoHide
+    GuiControl, Disable, BuildSelectBtn
+    GuiControl, Disable, LangSelect
+    GuiControl, Disable, EditionSelect
+    GuiControl, Disable, StartProcessBtn
+
+    SelectedBuild := BuildIDs[BuildSelect]
+    GetFileInfoForUpdate(SelectedBuild)
+    RunWait, %ComSpec% /c files\php\php.exe -c files\php\php.ini src\listlangs.php %SelectedBuild% 2>>files\uupdump.log 1>files\langs.txt, , Hide
+
+    LangCodes := PopulateLangList()
+    GuiControl, Enable, BuildSelectBtn
+    if LangCodes != 0
+        Gosub, LangSelected
+Return
+
+LangSelected:
+    Gui Submit, NoHide
+    GuiControl, Disable, BuildSelectBtn
+    GuiControl, Disable, EditionSelect
+    GuiControl, Disable, StartProcessBtn
+    SelectedLang := LangCodes[LangSelect]
+    RunWait, %ComSpec% /c files\php\php.exe -c files\php\php.ini src\listeditions.php %SelectedLang% %SelectedBuild% 2>>files\uupdump.log 1>files\editions.txt, , Hide
+
+    EditionCodes := PopulateEditionList()
+    GuiControl, Enable, BuildSelectBtn
+    GuiControl, Enable, LangSelect
+
+    if EditionCodes != 0
+        Gosub, EditionSelected
+Return
+
+EditionSelected:
+    Gui Submit, NoHide
+    GuiControl, Disable, BuildSelectBtn
+    GuiControl, Disable, StartProcessBtn
+    SelectedEdition := EditionCodes[EditionSelect]
+
+    GuiControl, Enable, BuildSelectBtn
+    GuiControl, Enable, LangSelect
+    GuiControl, Enable, StartProcessBtn
+Return
+
+StartProcess:
+    if(A_GuiEvent != "Normal")
+        Return
+
+    Gui Submit, NoHide
+    IfNotExist, %DestinationLocation%
+    {
+        MsgBox, 16, Error, Destination location does not exist.
+        Return
+    }
+
+    Gui, +Disabled
+    Progress, 0 WM400 C00 ZH16 AM R0-10001, , Retrieving list of files..., Please wait..., Segoe UI
+    RunWait, %ComSpec% /c files\php\php.exe -c files\php\php.ini src\get.php %SelectedBuild% %SelectedLang% %SelectedEdition% 2>>files\uupdump.log 1>files\aria2_script.txt, , Hide
+
+    if ErrorLevel <> 0
+    {
+        Progress, Off
+        MsgBox, 16, Error, Failed to get list of available files. Selected build may be no longer downloadable.
+        Gui, -Disabled
+        Gui, Show
+        Return
+    }
+    Progress, 10001
+    Progress, 10000
+
+    Gui, Hide
+    Gui, -Disabled
+    Progress, Off
+
+    RunWait, %ComSpec% /c aria2_download.cmd
+    
+    if ErrorLevel <> 0
+    {
+        Progress, Off
+        Instruction := "Command prompt window has been closed or an error occurred."
+        Content := "Do you want to restart the download and conversion process using files that have been downloaded so far?`n`nIf you choose ""No"" all downloaded files will be removed."
+
+        Result := TaskDialog(Instruction, Content, AppName, 0x6, 0xFFFD)
+
+        If (Result == "Yes") {
+            Gosub, StartProcess
+        }
+
+        Gosub, KillApplication
+    }
+
+    Instruction := "Conversion process complete"
+    Content := "Click OK to start process of moving converted image to destination directory. This process may take a while depending on a speed of your hard drive."
+
+    TaskDialog(Instruction, Content, AppName, 0x1, 0xFFFD)
+
+    Loop, Files, %WorkDir%\*.ISO, F
+    {
+        IfNotExist, %DestinationLocation%\%A_LoopFileName%
+        {
+            FileMove, %A_LoopFileFullPath%, %DestinationLocation%\%A_LoopFileName%
+        } else {
+            MsgBox, 48, %AppName%, %DestinationLocation%\%A_LoopFileName% already exists.`n`nYou will be asked for a new name after clicking OK.
+            Loop
+            {
+                FileSelectFile, NewLocation, S16, %DestinationLocation%\%A_LoopFileName%, Select a new name for %A_LoopFileName%, (*.iso)
+            } until NewLocation <> ""
+            FileMove, %A_LoopFileFullPath%, %NewLocation%, 1
+        }
+    }
+    Progress, Off
+
+    Instruction := "Information"
+    Content := "Task has been completed."
+
+    TaskDialog(Instruction, Content, AppName, 0x1, 0xFFFD)
+    Gosub, KillApplication
+Return
+
+GuiClose:
+KillApplication:
+    Gui Destroy
+    FileRemoveDir %WorkDir%, 1
+
+    Loop, Files, %BaseDir%\*, D
+    {
+        DirectoryHasItems = 1
+        Break
+    }
+    if(!DirectoryHasItems) {
+        FileRemoveDir %BaseDir%, 1
+    }
+    ExitApp
+Return
+
+HideToolTip:
+    ToolTip
+Return
+
+ShowBuildToolTip(CtrlHwnd) {
+    ControlGetText, CtrlText, , ahk_id %CtrlHwnd%
+    ControlGetPos, X, Y, , , , ahk_id %CtrlHwnd%
+    Y += 24
+    ToolTip %CtrlText%, %X%, %Y%
+    SetTimer, HideToolTip, -2000
+}
+
+FindFolder() {
+    FileSelectFolder, DestinationLocation, , 3, Browse for destination location of ISO image
+    if DestinationLocation != 
+    {
+        GuiControl, , DestinationLocation, %DestinationLocation%        
+    }
+}
+
+PopulateBuildList() {
+    BuildList =
+    BuildIDs := []
+
+    Loop, Read, files\ids.txt
+    {
+        RegExMatch(A_LoopReadLine, "SO)(.*)\|(.*)\|(.*)\|(.*)", Match)
+        Build := Match.1
+        Arch := Match.2
+        ID := Match.3
+        Name := Match.4
+
+        BuildIDs[A_Index] := ID
+        BuildList .= Name " " Arch "|"
+        if(A_Index = 1)
+        {
+            BuildList .= "|"
+        }
+    }
+    GuiControl, , BuildSelect, %BuildList%
+    Return BuildIDs
+}
+
+PopulateLangList() {
+    GuiControl, , LangSelect, |
+    LangList =
+    LangCodes := []
+
+    Loop, Read, files\langs.txt
+    {
+        RegExMatch(A_LoopReadLine, "SO)(.*)\|(.*)", Match)
+        Code := Match.1
+        Lang := Match.2
+
+        if Code !=
+        {
+            LangCodes[A_Index] := Code
+            LangList .= Lang "|"
+            if(Code = "en-us")
+            {
+                LangList .= "|"
+            }
+        }
+    }
+    
+    if LangList =
+    {
+        MsgBox, 16, Error, There are no languages available for this selection.
+        Return 0
+    }
+    
+    GuiControl, , LangSelect, %LangList%
+    GuiControl, Enable, LangSelect
+
+    Return LangCodes
+}
+
+PopulateEditionList() {
+    GuiControl, , EditionSelect, |
+    EditionList = 
+    EditionCodes := []
+    EditionCodes[1] := 0
+
+    Loop, Read, files\editions.txt
+    {
+        RegExMatch(A_LoopReadLine, "SO)(.*)\|(.*)", Match)
+        Code := Match.1
+        Edition := Match.2
+
+        if Code !=
+        {
+            EditionCodes[A_Index+1] := Code
+            EditionList .= Edition "|"
+        }
+    }
+
+    if EditionList =
+    {
+        MsgBox, 16, Error, There are no editions available for this selection.
+        Return 0
+    }
+
+    EditionList = All editions||%EditionList%
+    GuiControl, , EditionSelect, %EditionList%
+    GuiControl, Enable, EditionSelect
+
+    Return EditionCodes
+}
+
+GetFileInfoForUpdate(Update) {
+    Progress, 0 WM400 C00 ZH16 AM R0-10001, , Retrieving fileinfo..., Please wait..., Segoe UI
+    Sleep, 16
+    Gui, +Disabled
+
+    IfNotExist fileinfo
+    {
+        FileCreateDir fileinfo
+    }
+    IfNotExist fileinfo\%Update%.json
+    {
+        URLDownloadToFile, https://gitlab.com/uup-dump/fileinfo/raw/master/%Update%.json, fileinfo\%Update%.json
+    }
+
+    Progress, 5001
+    Progress, 5000, , Retrieving packs...
+
+    IfNotExist packs
+    {
+        FileCreateDir packs
+    }
+    IfNotExist packs\%Update%.json.gz
+    {
+        URLDownloadToFile, https://gitlab.com/uup-dump/packs/raw/master/%Update%.json.gz, packs\%Update%.json.gz
+    }
+    
+    Progress, 10001
+    Progress, 10000
+
+    Gui, -Disabled
+    Progress, off
+}
+
+TaskDialog(Instruction, Content := "", Title := "", Buttons := 1, IconID := 0, IconRes := "", Owner := 0x10010) {
+    Local hModule, LoadLib, Ret
+
+    If (IconRes != "") {
+        hModule := DllCall("GetModuleHandle", "Str", IconRes, "Ptr")
+        LoadLib := !hModule
+            && hModule := DllCall("LoadLibraryEx", "Str", IconRes, "UInt", 0, "UInt", 0x2, "Ptr")
+    } Else {
+        hModule := 0
+        LoadLib := False
+    }
+
+    DllCall("TaskDialog"
+        , "Ptr" , Owner        ; hWndParent
+        , "Ptr" , hModule      ; hInstance
+        , "Ptr" , &Title       ; pszWindowTitle
+        , "Ptr" , &Instruction ; pszMainInstruction
+        , "Ptr" , &Content     ; pszContent
+        , "Int" , Buttons      ; dwCommonButtons
+        , "Ptr" , IconID       ; pszIcon
+        , "Int*", Ret := 0)    ; *pnButton
+
+    If (LoadLib) {
+        DllCall("FreeLibrary", "Ptr", hModule)
+    }
+
+    Return {1: "OK", 2: "Cancel", 4: "Retry", 6: "Yes", 7: "No", 8: "Close"}[Ret]
+}
