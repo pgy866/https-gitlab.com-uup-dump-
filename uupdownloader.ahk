@@ -12,11 +12,11 @@ Execution_Level=4
 Set_Version_Info=1
 Company_Name=UUP dump authors
 File_Description=UUP dump downloader
-File_Version=0.1.1.0
+File_Version=0.2.0.0
 Inc_File_Version=0
 Legal_Copyright=(c) 2018 UUP dump downloader
 Product_Name=UUP dump downloader
-Product_Version=0.1.1.0
+Product_Version=0.2.0.0
 [ICONS]
 Icon_1=%In_Dir%\files\icon1.ico
 Icon_2=0
@@ -35,7 +35,7 @@ SetBatchLines -1
 #NoTrayIcon
 #SingleInstance off
 
-Version = 0.1.1-alpha
+Version = 0.2.0-alpha
 AppName = UUP dump downloader v%version%
 
 if A_IsAdmin = 0
@@ -50,10 +50,10 @@ if A_OSVersion in WIN_NT4,WIN_95,WIN_98,WIN_ME,WIN_2000,WIN_XP,WIN_2003,WIN_VIST
     ExitApp
 }
 
-Instruction := "Preview version warning"
+Instruction := "Preview version"
 Content := "This is a preview version of " AppName ".`n`nThis means that this application may work incorrectly, cause unknown problems or even remove files. YOU HAVE BEEN WARNED.`n`nDo you want to continue?"
 
-Result := TaskDialog(Instruction, Content, AppName, 0x6, 0xFFFA)
+Result := TaskDialog(Instruction, Content, AppName, 0x6, 0xFFFF)
 
 if(Result == "No") {
     ExitApp
@@ -61,7 +61,7 @@ if(Result == "No") {
 
 Result =
 Instruction =
-Content = 
+Content =
 
 SplitPath, A_ScriptFullPath,,,,, ScriptDrive
 BaseDir = %ScriptDrive%\$UUPDUMP
@@ -73,7 +73,7 @@ Loop {
 
 FileCreateDir, %WorkDir%
 FileSetAttrib, +H, %BaseDir%
-	
+
 IfNotExist, %WorkDir%
 {
 	MsgBox, 16, Error, Failed to create working directory.
@@ -94,13 +94,15 @@ Gui Add, Text, x264 y152 w224 h23, Edition
 Gui Add, DropDownList, x264 y175 w224 +AltSubmit +Disabled vEditionSelect gEditionSelected
 Gui Add, GroupBox, x16 y60 w480 h60, Build selection
 Gui Add, GroupBox, x16 y132 w480 h80, Language and edition
-Gui Add, GroupBox, x16 y226 w480 h60, Save in
+Gui Add, GroupBox, x16 y226 w480 h88, Save options
 Gui Add, Edit, x24 y251 w376 h22 vDestinationLocation, %A_ScriptDir%
 Gui Add, Button, x408 y250 w80 h24 gFindFolder, &Browse...
-Gui Add, Custom, x16 y302 w480 h58 ClassButton +0x200E gStartProcess vStartProcessBtn +Disabled, &Start process`nDownloads selected build and creates ISO image from it
+Gui Add, Checkbox, x24 y282 w224 h24 vProcessSaveUUP gChangeStateOfSkipConversionButton, Save UUPs to "UUPs" subdirectory
+Gui Add, Checkbox, x264 y282 w224 h24 vProcessSkipConversion +Disabled, Skip UUP to ISO conversion
+Gui Add, Custom, x16 y324 w480 h58 ClassButton +0x200E gStartProcess vStartProcessBtn +Disabled, &Start process`nDownloads selected build and creates ISO image from it
 
 Gui, +Disabled
-Gui Show, w512 h376, %AppName%
+Gui Show, w512 h398, %AppName%
 Gosub, PrepareEnv
 Gui, -Disabled
 Return
@@ -123,7 +125,7 @@ PrepareEnv:
 
     if(PHPTEST != "PHPTESTSUCCESS")
     {
-        MsgBox, 16, Error, 
+        MsgBox, 16, Error,
 (
 PHP backend test failed. Without this backend working this application cannot continue to operate.
 
@@ -210,11 +212,28 @@ EditionSelected:
     GuiControl, Enable, StartProcessBtn
 Return
 
+ChangeStateOfSkipConversionButton:
+    Gui, Submit, NoHide
+    if ProcessSaveUUP = 1
+    {
+        GuiControl, Enable, ProcessSkipConversion
+    } else {
+        GuiControl,, ProcessSkipConversion, 0
+        GuiControl, Disable, ProcessSkipConversion
+        Gui, Submit, NoHide
+    }
+Return
+
 StartProcess:
     if(A_GuiEvent != "Normal")
         Return
 
     Gui Submit, NoHide
+
+    DownloadScript = aria2_download.cmd
+    if ProcessSkipConversion = 1
+        DownloadScript = aria2_download_noconvert.cmd
+
     IfNotExist, %DestinationLocation%
     {
         MsgBox, 16, Error, Destination location does not exist.
@@ -240,8 +259,8 @@ StartProcess:
     Gui, -Disabled
     Progress, Off
 
-    RunWait, %ComSpec% /c aria2_download.cmd
-    
+    RunWait, %ComSpec% /c %DownloadScript%
+
     if ErrorLevel <> 0
     {
         Progress, Off
@@ -257,26 +276,24 @@ StartProcess:
         Gosub, KillApplication
     }
 
-    Instruction := "Conversion process complete"
-    Content := "Click OK to start process of moving converted image to destination directory. This process may take a while depending on a speed of your hard drive."
+    Instruction := "Process complete"
+    Content := "Click OK to start process of moving final files to destination directory. This process may take a while depending on a speed of your hard drive."
 
     TaskDialog(Instruction, Content, AppName, 0x1, 0xFFFD)
 
     Loop, Files, %WorkDir%\*.ISO, F
+        MoveFileToLocation(DestinationLocation, A_LoopFileFullPath)
+
+    if ProcessSaveUUP = 1
     {
-        IfNotExist, %DestinationLocation%\%A_LoopFileName%
-        {
-            FileMove, %A_LoopFileFullPath%, %DestinationLocation%\%A_LoopFileName%
-        } else {
-            MsgBox, 48, %AppName%, %DestinationLocation%\%A_LoopFileName% already exists.`n`nYou will be asked for a new name after clicking OK.
-            Loop
-            {
-                FileSelectFile, NewLocation, S16, %DestinationLocation%\%A_LoopFileName%, Select a new name for %A_LoopFileName%, (*.iso)
-            } until NewLocation <> ""
-            FileMove, %A_LoopFileFullPath%, %NewLocation%, 1
-        }
+        FileDelete, %WorkDir%\UUPs\.README
+
+        IfNotExist, %DestinationLocation%\UUPs
+            FileCreateDir, %DestinationLocation%\UUPs
+
+        Loop, Files, %WorkDir%\UUPs\*.*, F
+            MoveFileToLocation(DestinationLocation "\UUPs", A_LoopFileFullPath)
     }
-    Progress, Off
 
     Instruction := "Information"
     Content := "Task has been completed."
@@ -314,11 +331,16 @@ ShowBuildToolTip(CtrlHwnd) {
 }
 
 FindFolder() {
+    Global ScriptDrive
     FileSelectFolder, DestinationLocation, , 3, Browse for destination location of ISO image
-    if DestinationLocation != 
+    if DestinationLocation !=
     {
-        GuiControl, , DestinationLocation, %DestinationLocation%        
+        GuiControl, , DestinationLocation, %DestinationLocation%
     }
+
+    SplitPath, DestinationLocation,,,,, SelectedDrive
+    if(SelectedDrive <> ScriptDrive)
+        MsgBox, 48, Warning, Selected path is on a different disk than executable of this application. Due to this the final copy process may take a long time. For quick copy process, please run this application from a disk on which you wish to save the final files.
 }
 
 PopulateBuildList() {
@@ -365,13 +387,13 @@ PopulateLangList() {
             }
         }
     }
-    
+
     if LangList =
     {
         MsgBox, 16, Error, There are no languages available for this selection.
         Return 0
     }
-    
+
     GuiControl, , LangSelect, %LangList%
     GuiControl, Enable, LangSelect
 
@@ -380,7 +402,7 @@ PopulateLangList() {
 
 PopulateEditionList() {
     GuiControl, , EditionSelect, |
-    EditionList = 
+    EditionList =
     EditionCodes := []
     EditionCodes[1] := 0
 
@@ -435,12 +457,29 @@ GetFileInfoForUpdate(Update) {
     {
         URLDownloadToFile, https://gitlab.com/uup-dump/packs/raw/master/%Update%.json.gz, packs\%Update%.json.gz
     }
-    
+
     Progress, 10001
     Progress, 10000
 
     Gui, -Disabled
     Progress, off
+}
+
+MoveFileToLocation(Dest, File) {
+    Global AppName
+    SplitPath, File, FileName
+
+    IfNotExist, %Dest%\%FileName%
+    {
+        FileMove, %File%, %Dest%\%FileName%
+    } else {
+        MsgBox, 48, %AppName%, %Dest%\%FileName% already exists.`n`nYou will be asked for a new name after clicking OK.
+    Loop
+    {
+        FileSelectFile, NewLocation, S16, %Dest%\%FileName%, Select a new name for %FileName%, (*.iso)
+    } until NewLocation <> ""
+        FileMove, %File%, %NewLocation%, 1
+    }
 }
 
 TaskDialog(Instruction, Content := "", Title := "", Buttons := 1, IconID := 0, IconRes := "", Owner := 0x10010) {
