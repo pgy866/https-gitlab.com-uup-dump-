@@ -12,11 +12,11 @@ Execution_Level=4
 Set_Version_Info=1
 Company_Name=UUP dump authors
 File_Description=UUP dump downloader
-File_Version=0.2.0.0
+File_Version=0.3.0.0
 Inc_File_Version=0
 Legal_Copyright=(c) 2018 UUP dump downloader
 Product_Name=UUP dump downloader
-Product_Version=0.2.0.0
+Product_Version=0.3.0.0
 [ICONS]
 Icon_1=%In_Dir%\files\icon1.ico
 Icon_2=0
@@ -35,8 +35,11 @@ SetBatchLines -1
 #NoTrayIcon
 #SingleInstance off
 
-Version = 0.2.0-alpha
-AppName = UUP dump downloader v%version%
+Version = 0.3.0-alpha
+AppNameOnly = UUP dump downloader
+
+AppName = %AppNameOnly% v%version%
+UserAgent = %AppNameOnly%/%version%
 
 if A_IsAdmin = 0
 {
@@ -157,11 +160,10 @@ The application will close.
     Progress, 6000, , Retrieving list of builds...
     Sleep, 1
 
-    URLDownloadToFile, https://uupdump.ml/listid.php, files\ids.txt
+    BuildIDs := PopulateBuildList()
     Progress, 10001
     Progress, 10000
 
-    BuildIDs := PopulateBuildList()
     GuiControl Enable, BuildSelect
     GuiControl Enable, BuildSelectBtn
 
@@ -176,7 +178,12 @@ BuildSelectOK:
     GuiControl, Disable, StartProcessBtn
 
     SelectedBuild := BuildIDs[BuildSelect]
-    GetFileInfoForUpdate(SelectedBuild)
+    if(GetFileInfoForUpdate(SelectedBuild) = 0)
+    {
+        GuiControl, Enable, BuildSelectBtn
+        Return
+    }
+
     RunWait, %ComSpec% /c files\php\php.exe -c files\php\php.ini src\listlangs.php %SelectedBuild% 2>>files\uupdump.log 1>files\langs.txt, , Hide
 
     LangCodes := PopulateLangList()
@@ -304,6 +311,7 @@ Return
 
 GuiClose:
 KillApplication:
+    Progress, off
     Gui Destroy
     FileRemoveDir %WorkDir%, 1
 
@@ -344,24 +352,36 @@ FindFolder() {
 }
 
 PopulateBuildList() {
+    Response := UrlGet("https://uupdump.ml/listid.php", "GET")
+
     BuildList =
     BuildIDs := []
 
-    Loop, Read, files\ids.txt
+    Loop, Parse, Response, `n
     {
-        RegExMatch(A_LoopReadLine, "SO)(.*)\|(.*)\|(.*)\|(.*)", Match)
+        RegExMatch(A_LoopField, "SO)(.*)\|(.*)\|(.*)\|(.*)", Match)
         Build := Match.1
         Arch := Match.2
         ID := Match.3
         Name := Match.4
 
-        BuildIDs[A_Index] := ID
-        BuildList .= Name " " Arch "|"
-        if(A_Index = 1)
+        if ID !=
         {
-            BuildList .= "|"
+            BuildIDs[A_Index] := ID
+            BuildList .= Name " " Arch "|"
+            if(A_Index = 1)
+            {
+                BuildList .= "|"
+            }
         }
     }
+
+    if BuildList =
+    {
+        MsgBox, 16, Error, Cannot retrieve list of available builds.
+        Gosub, KillApplication
+    }
+
     GuiControl, , BuildSelect, %BuildList%
     Return BuildIDs
 }
@@ -441,8 +461,20 @@ GetFileInfoForUpdate(Update) {
     {
         FileCreateDir fileinfo
     }
+
     IfNotExist fileinfo\%Update%.json
     {
+        Response := UrlGet("https://gitlab.com/uup-dump/fileinfo/raw/master/" Update ".json", "HEAD")
+
+        if(Response != 200)
+        {
+            MsgBox, 16, Error, Fileinfo database does not exist for this selection.
+            Gui, -Disabled
+            Progress, Off
+            Return 0
+        }
+        Progress, 1001
+        Progress, 1000
         URLDownloadToFile, https://gitlab.com/uup-dump/fileinfo/raw/master/%Update%.json, fileinfo\%Update%.json
     }
 
@@ -453,9 +485,17 @@ GetFileInfoForUpdate(Update) {
     {
         FileCreateDir packs
     }
+
     IfNotExist packs\%Update%.json.gz
     {
-        URLDownloadToFile, https://gitlab.com/uup-dump/packs/raw/master/%Update%.json.gz, packs\%Update%.json.gz
+        Response := UrlGet("https://gitlab.com/uup-dump/packs/raw/master/" Update ".json.gz", "HEAD")
+
+        if(Response = 200)
+        {
+            Progress, 6001
+            Progress, 6000
+            URLDownloadToFile, https://gitlab.com/uup-dump/packs/raw/master/%Update%.json.gz, packs\%Update%.json.gz
+        }
     }
 
     Progress, 10001
@@ -510,3 +550,16 @@ TaskDialog(Instruction, Content := "", Title := "", Buttons := 1, IconID := 0, I
 
     Return {1: "OK", 2: "Cancel", 4: "Retry", 6: "Yes", 7: "No", 8: "Close"}[Ret]
 }
+
+UrlGet(URL, Method) {
+    Global UserAgent
+    WebRequest := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+    WebRequest.Open(Method, URL, false)
+    WebRequest.setRequestHeader("User-Agent", UserAgent)
+    WebRequest.Send()
+    if(Method = "HEAD")
+        Return WebRequest.Status
+
+    Return WebRequest.ResponseText
+}
+
