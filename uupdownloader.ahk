@@ -14,7 +14,7 @@ Company_Name=UUP dump authors
 File_Description=UUP dump downloader
 File_Version=0.3.0.0
 Inc_File_Version=0
-Legal_Copyright=(c) 2018 UUP dump downloader
+Legal_Copyright=(c) 2018 UUP dump authors
 Product_Name=UUP dump downloader
 Product_Version=0.3.0.0
 [ICONS]
