@@ -18,7 +18,7 @@ Legal_Copyright=(c) 2018 UUP dump downloader
 Product_Name=UUP dump downloader
 Product_Version=0.3.0.0
 [ICONS]
-Icon_1=%In_Dir%\files\icon1.ico
+Icon_1=%In_Dir%\files\icon.ico
 Icon_2=0
 Icon_3=0
 Icon_4=0
