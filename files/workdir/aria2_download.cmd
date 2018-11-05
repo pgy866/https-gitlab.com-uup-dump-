@@ -1,7 +1,7 @@
 @echo off
 cd /d "%~dp0"
 
-set "aria2=files\aria2c.exe"
+set "aria2=files\aria2\aria2c.exe"
 set "a7z=files\7za.exe"
 set "aria2Script=files\aria2_script.txt"
 set "destDir=UUPs"
