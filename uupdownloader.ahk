@@ -12,11 +12,11 @@ Execution_Level=4
 Set_Version_Info=1
 Company_Name=UUP dump authors
 File_Description=UUP dump downloader
-File_Version=0.3.0.0
+File_Version=0.3.1.0
 Inc_File_Version=0
 Legal_Copyright=(c) 2018 UUP dump authors
 Product_Name=UUP dump downloader
-Product_Version=0.3.0.0
+Product_Version=0.3.1.0
 [ICONS]
 Icon_1=%In_Dir%\files\icon.ico
 Icon_2=0
@@ -35,7 +35,7 @@ SetBatchLines -1
 #NoTrayIcon
 #SingleInstance off
 
-Version = 0.3.0-alpha
+Version = 0.3.1-alpha
 AppNameOnly = UUP dump downloader
 
 AppName = %AppNameOnly% v%version%
