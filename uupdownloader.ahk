@@ -12,11 +12,11 @@ Execution_Level=4
 Set_Version_Info=1
 Company_Name=UUP dump authors
 File_Description=UUP dump downloader
-File_Version=0.3.1.0
+File_Version=0.3.2.0
 Inc_File_Version=0
 Legal_Copyright=(c) 2018 UUP dump authors
 Product_Name=UUP dump downloader
-Product_Version=0.3.1.0
+Product_Version=0.3.2.0
 [ICONS]
 Icon_1=%In_Dir%\files\icon.ico
 Icon_2=0
@@ -35,7 +35,7 @@ SetBatchLines -1
 #NoTrayIcon
 #SingleInstance off
 
-Version = 0.3.1-alpha
+Version = 0.3.2-alpha
 AppNameOnly = UUP dump downloader
 
 AppName = %AppNameOnly% v%version%
@@ -105,9 +105,10 @@ Gui Add, Checkbox, x264 y282 w224 h24 vProcessSkipConversion +Disabled, Skip UUP
 Gui Add, Custom, x16 y324 w480 h58 ClassButton +0x200E gStartProcess vStartProcessBtn +Disabled, &Start process`nDownloads selected build and creates ISO image from it
 
 Gui, +Disabled
-Gui Show, w512 h398, %AppName%
+Gui Show, w512 h398, %AppName% (API Unknown)
 Gosub, PrepareEnv
 Gui, -Disabled
+Gui, Show, NoActivate, %AppName% (API v%APIVersion%)
 Return
 
 PrepareEnv:
@@ -159,6 +160,9 @@ The application will close.
     Progress, 6001
     Progress, 6000, , Retrieving list of builds...
     Sleep, 1
+
+    RunWait, cmd /c files\php\php.exe -c files\php\php.ini src\apiver.php >files\api.txt, , Hide
+    FileRead, APIVersion, files\api.txt
 
     BuildIDs := PopulateBuildList()
     Progress, 10001
@@ -562,4 +566,3 @@ UrlGet(URL, Method) {
 
     Return WebRequest.ResponseText
 }
-
