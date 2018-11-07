@@ -12,11 +12,11 @@ Execution_Level=4
 Set_Version_Info=1
 Company_Name=UUP dump authors
 File_Description=UUP dump downloader
-File_Version=0.3.2.0
+File_Version=0.4.0.0
 Inc_File_Version=0
 Legal_Copyright=(c) 2018 UUP dump authors
 Product_Name=UUP dump downloader
-Product_Version=0.3.2.0
+Product_Version=0.4.0.0
 [ICONS]
 Icon_1=%In_Dir%\files\icon.ico
 Icon_2=0
@@ -35,11 +35,13 @@ SetBatchLines -1
 #NoTrayIcon
 #SingleInstance off
 
-Version = 0.3.2-alpha
+Version = 0.4.0-alpha
 AppNameOnly = UUP dump downloader
 
 AppName = %AppNameOnly% v%version%
 UserAgent = %AppNameOnly%/%version%
+
+#Include lib\Subprocess.ahk
 
 if A_IsAdmin = 0
 {
@@ -105,7 +107,7 @@ Gui Add, Checkbox, x264 y282 w224 h24 vProcessSkipConversion +Disabled, Skip UUP
 Gui Add, Custom, x16 y324 w480 h58 ClassButton +0x200E gStartProcess vStartProcessBtn +Disabled, &Start process`nDownloads selected build and creates ISO image from it
 
 Gui, +Disabled
-Gui Show, w512 h398, %AppName% (API Unknown)
+Gui Show, w512 h398, %AppName%
 Gosub, PrepareEnv
 Gui, -Disabled
 Gui, Show, NoActivate, %AppName% (API v%APIVersion%)
@@ -124,8 +126,14 @@ PrepareEnv:
     FileDelete, workdir.7z
     FileDelete, converter.7z
 
-    RunWait, cmd /c files\php\php.exe -c files\php\php.ini -r "echo 'PHPTESTSUCCESS';" >phptest.txt, , Hide
-    FileRead, PHPTEST, phptest.txt
+    Command = %ComSpec% /c files\php\php.exe -c files\php\php.ini -r "echo 'PHPTESTSUCCESS';"
+    Proc := Subprocess_Run(Command)
+    while(Proc.Status == 0)
+    {
+        Sleep, 10
+    }
+
+    PHPTEST := Proc.StdOut.ReadAll()
 
     if(PHPTEST != "PHPTESTSUCCESS")
     {
@@ -161,8 +169,14 @@ The application will close.
     Progress, 6000, , Retrieving list of builds...
     Sleep, 1
 
-    RunWait, cmd /c files\php\php.exe -c files\php\php.ini src\apiver.php >files\api.txt, , Hide
-    FileRead, APIVersion, files\api.txt
+    Command = %ComSpec% /c files\php\php.exe -c files\php\php.ini src\apiver.php
+    Proc := Subprocess_Run(Command)
+    while(Proc.Status == 0)
+    {
+        Sleep, 10
+    }
+
+    APIVersion := Proc.StdOut.ReadAll()
 
     BuildIDs := PopulateBuildList()
     Progress, 10001
@@ -188,9 +202,7 @@ BuildSelectOK:
         Return
     }
 
-    RunWait, %ComSpec% /c files\php\php.exe -c files\php\php.ini src\listlangs.php %SelectedBuild% 2>>files\uupdump.log 1>files\langs.txt, , Hide
-
-    LangCodes := PopulateLangList()
+    LangCodes := PopulateLangList(SelectedBuild)
     GuiControl, Enable, BuildSelectBtn
     if LangCodes != 0
         Gosub, LangSelected
@@ -202,9 +214,8 @@ LangSelected:
     GuiControl, Disable, EditionSelect
     GuiControl, Disable, StartProcessBtn
     SelectedLang := LangCodes[LangSelect]
-    RunWait, %ComSpec% /c files\php\php.exe -c files\php\php.ini src\listeditions.php %SelectedLang% %SelectedBuild% 2>>files\uupdump.log 1>files\editions.txt, , Hide
 
-    EditionCodes := PopulateEditionList()
+    EditionCodes := PopulateEditionList(SelectedBuild, SelectedLang)
     GuiControl, Enable, BuildSelectBtn
     GuiControl, Enable, LangSelect
 
@@ -313,6 +324,10 @@ StartProcess:
     Gosub, KillApplication
 Return
 
+HideToolTip:
+    ToolTip
+Return
+
 GuiClose:
 KillApplication:
     Progress, off
@@ -330,16 +345,25 @@ KillApplication:
     ExitApp
 Return
 
-HideToolTip:
-    ToolTip
+#IfWinActive, ahk_class AutoHotkeyGUI
+!D::
+    if(!FileExist(WorkDir)) {
+        MsgBox, 16, Error, Workdir has not been created yet
+        Return
+    }
+    Run, %A_WinDir%\Explorer.exe %WorkDir%
 Return
+#IfWinActive
 
 ShowBuildToolTip(CtrlHwnd) {
     ControlGetText, CtrlText, , ahk_id %CtrlHwnd%
     ControlGetPos, X, Y, , , , ahk_id %CtrlHwnd%
     Y += 24
-    ToolTip %CtrlText%, %X%, %Y%
-    SetTimer, HideToolTip, -2000
+    IfWinActive, ahk_class AutoHotkeyGUI
+    {
+        ToolTip %CtrlText%, %X%, %Y%
+        SetTimer, HideToolTip, -2000
+    }
 }
 
 FindFolder() {
@@ -390,14 +414,26 @@ PopulateBuildList() {
     Return BuildIDs
 }
 
-PopulateLangList() {
+PopulateLangList(SelectedBuild) {
+    Command = %ComSpec% /c files\php\php.exe -c files\php\php.ini src\listlangs.php %SelectedBuild%
+    Proc := Subprocess_Run(Command)
+
+    while(Proc.Status == 0)
+    {
+        Sleep, 10
+    }
+
+    Output := Proc.StdOut.ReadAll()
+    StdErr := Proc.StdErr.ReadAll()
+    FileAppend, %StdErr%, files\uupdump.log
+
     GuiControl, , LangSelect, |
     LangList =
     LangCodes := []
 
-    Loop, Read, files\langs.txt
+    Loop, Parse, Output, `n
     {
-        RegExMatch(A_LoopReadLine, "SO)(.*)\|(.*)", Match)
+        RegExMatch(A_LoopField, "SO)(.*)\|(.*)", Match)
         Code := Match.1
         Lang := Match.2
 
@@ -424,15 +460,35 @@ PopulateLangList() {
     Return LangCodes
 }
 
-PopulateEditionList() {
+PopulateEditionList(SelectedBuild, Lang) {
+    Global LangCodes, LangSelect
+
+    Command = %ComSpec% /c files\php\php.exe -c files\php\php.ini src\listeditions.php %Lang% %SelectedBuild%
+    Proc := Subprocess_Run(Command)
+
+    while(Proc.Status == 0)
+    {
+        Sleep, 10
+    }
+
+    Output := Proc.StdOut.ReadAll()
+    StdErr := Proc.StdErr.ReadAll()
+    FileAppend, %StdErr%, files\uupdump.log
+
+    Gui, Submit, NoHide
+    SelectedLang := LangCodes[LangSelect]
+
+    If(Lang != SelectedLang)
+        Return PopulateEditionList(SelectedBuild, SelectedLang)
+
     GuiControl, , EditionSelect, |
     EditionList =
     EditionCodes := []
     EditionCodes[1] := 0
 
-    Loop, Read, files\editions.txt
+    Loop, Parse, Output, `n
     {
-        RegExMatch(A_LoopReadLine, "SO)(.*)\|(.*)", Match)
+        RegExMatch(A_LoopField, "SO)(.*)\|(.*)", Match)
         Code := Match.1
         Edition := Match.2
 
@@ -557,7 +613,7 @@ TaskDialog(Instruction, Content := "", Title := "", Buttons := 1, IconID := 0, I
 
 UrlGet(URL, Method) {
     Global UserAgent
-    WebRequest := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+    WebRequest := ComObjCreate("MSXML2.XMLHTTP.3.0")
     WebRequest.Open(Method, URL, false)
     WebRequest.setRequestHeader("User-Agent", UserAgent)
     WebRequest.Send()

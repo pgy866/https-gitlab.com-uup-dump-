@@ -12,6 +12,8 @@ if(isset($editions['error'])) {
 $editions = $editions['editionFancyNames'];
 asort($editions);
 
+consoleLogger('API returned '.count($editions).' editions for '.$updateId.' '.$lang);
+
 foreach($editions as $key => $val) {
     echo $key;
     echo '|';
