@@ -12,11 +12,11 @@ Execution_Level=4
 Set_Version_Info=1
 Company_Name=UUP dump authors
 File_Description=UUP dump downloader
-File_Version=0.4.0.0
+File_Version=0.5.0.0
 Inc_File_Version=0
 Legal_Copyright=(c) 2018 UUP dump authors
 Product_Name=UUP dump downloader
-Product_Version=0.4.0.0
+Product_Version=0.5.0.0
 [ICONS]
 Icon_1=%In_Dir%\files\icon.ico
 Icon_2=0
@@ -35,13 +35,13 @@ SetBatchLines -1
 #NoTrayIcon
 #SingleInstance off
 
-Version = 0.4.0-alpha
+Version = 0.5.0-alpha
 AppNameOnly = UUP dump downloader
 
 AppName = %AppNameOnly% v%version%
 UserAgent = %AppNameOnly%/%version%
 
-#Include lib\Subprocess.ahk
+CurrentPid := DllCall("GetCurrentProcessId")
 
 if A_IsAdmin = 0
 {
@@ -54,6 +54,9 @@ if A_OSVersion in WIN_NT4,WIN_95,WIN_98,WIN_ME,WIN_2000,WIN_XP,WIN_2003,WIN_VIST
     MsgBox, 16, %AppName%, This application requires Windows 7 or later.
     ExitApp
 }
+
+
+#Include lib\Subprocess.ahk
 
 Instruction := "Preview version"
 Content := "This is a preview version of " AppName ".`n`nThis means that this application may work incorrectly, cause unknown problems or even remove files. YOU HAVE BEEN WARNED.`n`nDo you want to continue?"
@@ -68,22 +71,11 @@ Result =
 Instruction =
 Content =
 
+BaseDirName = $UUPDUMP
+
 SplitPath, A_ScriptFullPath,,,,, ScriptDrive
-BaseDir = %ScriptDrive%\$UUPDUMP
-
-Loop {
-	Random, instance, 0, 2147483647
-	WorkDir = %BaseDir%\%instance%
-} until !FileExist(WorkDir)
-
-FileCreateDir, %WorkDir%
-FileSetAttrib, +H, %BaseDir%
-
-IfNotExist, %WorkDir%
-{
-	MsgBox, 16, Error, Failed to create working directory.
-	ExitApp
-}
+BaseDir = %ScriptDrive%\%BaseDirName%
+WorkDir := CreateWorkDir(ScriptDrive)
 
 Gui Font, s9, Segoe UI
 Gui Font
@@ -129,9 +121,7 @@ PrepareEnv:
     Command = %ComSpec% /c files\php\php.exe -c files\php\php.ini -r "echo 'PHPTESTSUCCESS';"
     Proc := Subprocess_Run(Command)
     while(Proc.Status == 0)
-    {
         Sleep, 10
-    }
 
     PHPTEST := Proc.StdOut.ReadAll()
 
@@ -155,8 +145,6 @@ The application will close.
         gosub, KillApplication
     }
 
-    FileDelete, phptest.txt
-
     Progress, 1001
     Progress, 1000, , Retrieving API...
     Sleep, 1
@@ -172,9 +160,7 @@ The application will close.
     Command = %ComSpec% /c files\php\php.exe -c files\php\php.ini src\apiver.php
     Proc := Subprocess_Run(Command)
     while(Proc.Status == 0)
-    {
         Sleep, 10
-    }
 
     APIVersion := Proc.StdOut.ReadAll()
 
@@ -256,6 +242,8 @@ StartProcess:
     if ProcessSkipConversion = 1
         DownloadScript = aria2_download_noconvert.cmd
 
+    CheckWorkDirLocation(DestinationLocation)
+
     IfNotExist, %DestinationLocation%
     {
         MsgBox, 16, Error, Destination location does not exist.
@@ -310,11 +298,19 @@ StartProcess:
     {
         FileDelete, %WorkDir%\UUPs\.README
 
-        IfNotExist, %DestinationLocation%\UUPs
-            FileCreateDir, %DestinationLocation%\UUPs
+        NewUupDir = %DestinationLocation%\UUPs
+        Index := 0
+        while(FileExist(NewUupDir))
+        {
+            Index++
+            NewUupDir = %DestinationLocation%\UUPs_%Index%
+        }
+
+        IfNotExist, %NewUupDir%
+            FileCreateDir, %NewUupDir%
 
         Loop, Files, %WorkDir%\UUPs\*.*, F
-            MoveFileToLocation(DestinationLocation "\UUPs", A_LoopFileFullPath)
+            MoveFileToLocation(NewUupDir, A_LoopFileFullPath)
     }
 
     Instruction := "Information"
@@ -332,20 +328,12 @@ GuiClose:
 KillApplication:
     Progress, off
     Gui Destroy
-    FileRemoveDir %WorkDir%, 1
 
-    Loop, Files, %BaseDir%\*, D
-    {
-        DirectoryHasItems = 1
-        Break
-    }
-    if(!DirectoryHasItems) {
-        FileRemoveDir %BaseDir%, 1
-    }
+    CleanWorkDir(WorkDir, BaseDir)
     ExitApp
 Return
 
-#IfWinActive, ahk_class AutoHotkeyGUI
+#If WinActive("ahk_pid " CurrentPid)
 !D::
     if(!FileExist(WorkDir)) {
         MsgBox, 16, Error, Workdir has not been created yet
@@ -353,7 +341,45 @@ Return
     }
     Run, %A_WinDir%\Explorer.exe %WorkDir%
 Return
-#IfWinActive
+#If
+
+CreateWorkDir(Loc) {
+    Global BaseDirName, BaseDir, CurrentDrive
+
+    SplitPath, Loc,,,,, Drive
+    BaseDir = %Drive%\%BaseDirName%
+    CurrentDrive = %Drive%
+
+    Instance := 0
+    Loop {
+        Instance++
+        WorkDir = %BaseDir%\%Instance%
+    } until !FileExist(WorkDir)
+
+    FileCreateDir, %WorkDir%
+    FileSetAttrib, +H, %BaseDir%
+
+    IfNotExist, %WorkDir%
+    {
+        MsgBox, 16, Error, Failed to create working directory.
+        ExitApp
+    }
+
+    Return WorkDir
+}
+
+MoveWorkDir(Loc) {
+    Global WorkDir, BaseDir
+
+    OldBaseDir := BaseDir
+    NewWorkDir := CreateWorkDir(Loc)
+    FileCopyDir, %WorkDir%, %NewWorkDir%, 1
+    SetWorkingDir %NewWorkDir%
+
+    CleanWorkDir(WorkDir, OldBaseDir)
+
+    WorkDir := NewWorkDir
+}
 
 ShowBuildToolTip(CtrlHwnd) {
     ControlGetText, CtrlText, , ahk_id %CtrlHwnd%
@@ -367,16 +393,26 @@ ShowBuildToolTip(CtrlHwnd) {
 }
 
 FindFolder() {
-    Global ScriptDrive
     FileSelectFolder, DestinationLocation, , 3, Browse for destination location of ISO image
-    if DestinationLocation !=
-    {
-        GuiControl, , DestinationLocation, %DestinationLocation%
-    }
 
+    if DestinationLocation =
+        Return
+
+    GuiControl, , DestinationLocation, %DestinationLocation%
+    CheckWorkDirLocation(DestinationLocation)
+}
+
+CheckWorkDirLocation(DestinationLocation) {
+    Global CurrentDrive
     SplitPath, DestinationLocation,,,,, SelectedDrive
-    if(SelectedDrive <> ScriptDrive)
-        MsgBox, 48, Warning, Selected path is on a different disk than executable of this application. Due to this the final copy process may take a long time. For quick copy process, please run this application from a disk on which you wish to save the final files.
+    if(SelectedDrive <> CurrentDrive)
+    {
+        Gui, +Disabled
+        Progress, 0 WM400 C00 ZH16 AM R0-10001, , Moving working directory..., Please wait..., Segoe UI
+        MoveWorkDir(SelectedDrive)
+        Gui, -Disabled
+        Progress, Off
+    }
 }
 
 PopulateBuildList() {
@@ -419,9 +455,7 @@ PopulateLangList(SelectedBuild) {
     Proc := Subprocess_Run(Command)
 
     while(Proc.Status == 0)
-    {
         Sleep, 10
-    }
 
     Output := Proc.StdOut.ReadAll()
     StdErr := Proc.StdErr.ReadAll()
@@ -467,9 +501,7 @@ PopulateEditionList(SelectedBuild, Lang) {
     Proc := Subprocess_Run(Command)
 
     while(Proc.Status == 0)
-    {
         Sleep, 10
-    }
 
     Output := Proc.StdOut.ReadAll()
     StdErr := Proc.StdErr.ReadAll()
@@ -567,18 +599,30 @@ GetFileInfoForUpdate(Update) {
 
 MoveFileToLocation(Dest, File) {
     Global AppName
-    SplitPath, File, FileName
+    SplitPath, File, FileName, FileDir, FileExt, FileNoExt
 
-    IfNotExist, %Dest%\%FileName%
+    NewFile = %Dest%\%FileName%
+    Index := 0
+    while(FileExist(NewFile))
     {
-        FileMove, %File%, %Dest%\%FileName%
-    } else {
-        MsgBox, 48, %AppName%, %Dest%\%FileName% already exists.`n`nYou will be asked for a new name after clicking OK.
-    Loop
+        Index++
+        NewFile = %Dest%\%FileNoExt%_%Index%.%FileExt%
+    }
+
+    FileMove, %File%, %NewFile%
+}
+
+CleanWorkDir(WorkDir, BaseDir) {
+    FileRemoveDir %WorkDir%, 1
+
+    Loop, Files, %BaseDir%\*, D
     {
-        FileSelectFile, NewLocation, S16, %Dest%\%FileName%, Select a new name for %FileName%, (*.iso)
-    } until NewLocation <> ""
-        FileMove, %File%, %NewLocation%, 1
+        DirectoryHasItems = 1
+        Break
+    }
+
+    if(!DirectoryHasItems) {
+        FileRemoveDir %BaseDir%, 1
     }
 }
 
@@ -614,9 +658,13 @@ TaskDialog(Instruction, Content := "", Title := "", Buttons := 1, IconID := 0, I
 UrlGet(URL, Method) {
     Global UserAgent
     WebRequest := ComObjCreate("MSXML2.XMLHTTP.3.0")
-    WebRequest.Open(Method, URL, false)
+    WebRequest.Open(Method, URL, true)
     WebRequest.setRequestHeader("User-Agent", UserAgent)
     WebRequest.Send()
+
+    while(WebRequest.readyState != 4)
+        Sleep, 10
+
     if(Method = "HEAD")
         Return WebRequest.Status
 

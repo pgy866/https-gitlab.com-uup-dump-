@@ -2,8 +2,7 @@
 require_once dirname(__FILE__).'/../api/shared/main.php';
 
 function brand($script) {
-    $projVersion = '0.1.0+internal';
-    return 'UUP dump? v'.$projVersion;
+    return 'UUP dump Internal';
 }
 
 function downloadFile($url, $location) {
