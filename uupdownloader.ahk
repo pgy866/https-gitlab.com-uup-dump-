@@ -1,4 +1,4 @@
-﻿/*
+/*
  * * * Compile_AHK SETTINGS BEGIN * * *
 
 [AHK2EXE]
@@ -12,11 +12,11 @@ Execution_Level=4
 Set_Version_Info=1
 Company_Name=UUP dump authors
 File_Description=UUP dump downloader
-File_Version=0.5.0.0
+File_Version=1.0.0.1001
 Inc_File_Version=0
 Legal_Copyright=(c) 2018 UUP dump authors
 Product_Name=UUP dump downloader
-Product_Version=0.5.0.0
+Product_Version=1.0.0.1001
 [ICONS]
 Icon_1=%In_Dir%\files\icon.ico
 Icon_2=0
@@ -35,13 +35,13 @@ SetBatchLines -1
 #NoTrayIcon
 #SingleInstance off
 
-Version = 0.5.0-alpha
+Version = 1.0.0-beta.1
 AppNameOnly = UUP dump downloader
 
 AppName = %AppNameOnly% v%version%
 UserAgent = %AppNameOnly%/%version%
 
-CurrentPid := DllCall("GetCurrentProcessId")
+BaseDirName = $UUPDUMP
 
 if A_IsAdmin = 0
 {
@@ -55,23 +55,10 @@ if A_OSVersion in WIN_NT4,WIN_95,WIN_98,WIN_ME,WIN_2000,WIN_XP,WIN_2003,WIN_VIST
     ExitApp
 }
 
-
 #Include lib\Subprocess.ahk
 
-Instruction := "Preview version"
-Content := "This is a preview version of " AppName ".`n`nThis means that this application may work incorrectly, cause unknown problems or even remove files. YOU HAVE BEEN WARNED.`n`nDo you want to continue?"
-
-Result := TaskDialog(Instruction, Content, AppName, 0x6, 0xFFFF)
-
-if(Result == "No") {
-    ExitApp
-}
-
-Result =
-Instruction =
-Content =
-
-BaseDirName = $UUPDUMP
+CurrentPid := DllCall("GetCurrentProcessId")
+Menu, Tray, Icon, imageres.dll, -54
 
 SplitPath, A_ScriptFullPath,,,,, ScriptDrive
 BaseDir = %ScriptDrive%\%BaseDirName%
@@ -251,23 +238,46 @@ StartProcess:
     }
 
     Gui, +Disabled
-    Progress, 0 WM400 C00 ZH16 AM R0-10001, , Retrieving list of files..., Please wait..., Segoe UI
-    RunWait, %ComSpec% /c files\php\php.exe -c files\php\php.ini src\get.php %SelectedBuild% %SelectedLang% %SelectedEdition% 2>>files\uupdump.log 1>files\aria2_script.txt, , Hide
+    Gui ProgressText: -MinimizeBox -MaximizeBox -SysMenu
+    Gui ProgressText: Font, s9, Segoe UI
+    Gui ProgressText: Add, Edit, x8 y31 w400 h155 vProgressTextEdit
+    Gui ProgressText: Add, Text, x8 y7 w400 h23, Retrieving list of files...
+    Gui ProgressText: Add, Progress, x8 y193 w400 h16 -Smooth +0x8 vProgressTextProgress, 0
+
+    Gui ProgressText: Show, w416 h217, Please wait...
+
+    Command = %ComSpec% /c files\php\php.exe -c files\php\php.ini src\get.php %SelectedBuild% %SelectedLang% %SelectedEdition% 1>files\aria2_script.txt
+    Proc := Subprocess_Run(Command)
+    while(Proc.Status == 0) {
+        Proc.StdErr.Peek(,,,AvailableData)
+        If(AvailableData) {
+            ReadData := Proc.StdErr.Read(AvailableData)
+            ProgressTextEdit := ProgressTextEdit ReadData
+            GuiControl, ProgressText:, ProgressTextEdit, %ProgressTextEdit%
+            FileAppend, %ReadData%, files\uupdump.log
+        }
+        GuiControl, ProgressText:, ProgressTextProgress, 0
+        Sleep, 33
+    }
+
+    ReadData := Proc.StdErr.ReadAll()
+    ProgressTextEdit := ProgressTextEdit ReadData
+    GuiControl, ProgressText:, ProgressTextEdit, %ProgressTextEdit%
+    FileAppend, %ReadData%, files\uupdump.log
 
     if ErrorLevel <> 0
     {
-        Progress, Off
+        Gui ProgressText: Destroy
         MsgBox, 16, Error, Failed to get list of available files. Selected build may be no longer downloadable.
         Gui, -Disabled
         Gui, Show
         Return
     }
-    Progress, 10001
-    Progress, 10000
 
     Gui, Hide
     Gui, -Disabled
-    Progress, Off
+    Gui ProgressText: Destroy
+    ProgressTextEdit := ""
 
     RunWait, %ComSpec% /c %DownloadScript%
 
@@ -281,15 +291,12 @@ StartProcess:
 
         If (Result == "Yes") {
             Gosub, StartProcess
+            Return
         }
 
         Gosub, KillApplication
+        Return
     }
-
-    Instruction := "Process complete"
-    Content := "Click OK to start process of moving final files to destination directory. This process may take a while depending on a speed of your hard drive."
-
-    TaskDialog(Instruction, Content, AppName, 0x1, 0xFFFD)
 
     Loop, Files, %WorkDir%\*.ISO, F
         MoveFileToLocation(DestinationLocation, A_LoopFileFullPath)
@@ -332,6 +339,9 @@ KillApplication:
     CleanWorkDir(WorkDir, BaseDir)
     ExitApp
 Return
+
+ProgressTextGuiClose:
+    Return
 
 #If WinActive("ahk_pid " CurrentPid)
 !D::
