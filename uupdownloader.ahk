@@ -58,7 +58,6 @@ if A_OSVersion in WIN_NT4,WIN_95,WIN_98,WIN_ME,WIN_2000,WIN_XP,WIN_2003,WIN_VIST
 #Include lib\Subprocess.ahk
 
 CurrentPid := DllCall("GetCurrentProcessId")
-Menu, Tray, Icon, imageres.dll, -54
 
 SplitPath, A_ScriptFullPath,,,,, ScriptDrive
 BaseDir = %ScriptDrive%\%BaseDirName%
