@@ -1,5 +1,6 @@
 @echo off
 cd /d "%~dp0"
+SETLOCAL ENABLEDELAYEDEXPANSION
 
 set "aria2=files\aria2\aria2c.exe"
 set "a7z=files\7za.exe"
@@ -8,10 +9,15 @@ set "destDir=UUPs"
 
 if NOT EXIST %aria2% goto :NO_ARIA2_ERROR
 if NOT EXIST %a7z% goto :NO_FILE_ERROR
+if NOT EXIST %aria2Script% goto :NO_FILE_ERROR
 
 echo Starting download of files...
 "%aria2%" -x16 -s16 -j5 -c -R -d"%destDir%" -i"%aria2Script%"
 if %ERRORLEVEL% GTR 0 goto DOWNLOAD_ERROR
+
+set esdsFound=0
+for %%f in (UUPs\*.ESD) do set /a esdsFound=!esdsFound!+1
+if %esdsFound% LSS 1 goto :DOWNLOAD_ERROR
 
 if EXIST convert-UUP.cmd goto :START_CONVERT
 pause
