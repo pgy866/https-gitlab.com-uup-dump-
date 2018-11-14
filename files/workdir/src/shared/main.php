@@ -1,10 +1,6 @@
 <?php
 require_once dirname(__FILE__).'/../api/shared/main.php';
 
-function brand($script) {
-    return 'UUP dump Internal';
-}
-
 function downloadFile($url, $location) {
     $file = fopen($location, 'w+');
     $req = curl_init($url);

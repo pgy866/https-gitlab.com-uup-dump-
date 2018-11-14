@@ -12,11 +12,11 @@ Execution_Level=4
 Set_Version_Info=1
 Company_Name=UUP dump authors
 File_Description=UUP dump downloader
-File_Version=1.0.0.1001
+File_Version=1.0.0.1002
 Inc_File_Version=0
 Legal_Copyright=(c) 2018 UUP dump authors
 Product_Name=UUP dump downloader
-Product_Version=1.0.0.1001
+Product_Version=1.0.0.1002
 [ICONS]
 Icon_1=%In_Dir%\files\icon.ico
 Icon_2=0
@@ -35,7 +35,7 @@ SetBatchLines -1
 #NoTrayIcon
 #SingleInstance off
 
-Version = 1.0.0-beta.1
+Version = 1.0.0-beta.2
 AppNameOnly = UUP dump downloader
 
 AppName = %AppNameOnly% v%version%
@@ -417,7 +417,7 @@ CheckWorkDirLocation(DestinationLocation) {
     if(SelectedDrive <> CurrentDrive)
     {
         Gui, +Disabled
-        Progress, 0 WM400 C00 ZH16 AM R0-10001, , Moving working directory..., Please wait..., Segoe UI
+        Progress, 0 FM12 WM400 C00 ZH0 AM, , Moving working directory..., Please wait..., Segoe UI
         MoveWorkDir(SelectedDrive)
         Gui, -Disabled
         Progress, Off

@@ -20,4 +20,3 @@ foreach($editions as $key => $val) {
     echo $val;
     echo "\n";
 }
-?>

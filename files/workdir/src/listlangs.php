@@ -14,4 +14,3 @@ foreach($langs as $key => $val) {
     echo $val;
     echo "\n";
 }
-?>

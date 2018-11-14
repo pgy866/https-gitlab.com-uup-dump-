@@ -7,7 +7,6 @@ $simple = isset($argv[4]) ? $argv[4] : 0;
 require_once 'api/get.php';
 require_once 'shared/main.php';
 
-consoleLogger(brand('get'));
 $files = uupGetFiles($updateId, $usePack, $desiredEdition);
 if(isset($files['error'])) {
     throwError($files['error']);
@@ -39,4 +38,3 @@ foreach($filesKeys as $val) {
     echo '  out='.$val."\n";
     echo '  checksum=sha-1='.$files[$val]['sha1']."\n\n";
 }
-?>
