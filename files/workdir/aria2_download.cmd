@@ -11,8 +11,11 @@ if NOT EXIST %aria2% goto :NO_ARIA2_ERROR
 if NOT EXIST %a7z% goto :NO_FILE_ERROR
 if NOT EXIST %aria2Script% goto :NO_FILE_ERROR
 
+set "speedLimit=0"
+if [%1] NEQ [] set "speedLimit=%1"
+
 echo Starting download of files...
-"%aria2%" -x16 -s16 -j5 -c -R -d"%destDir%" -i"%aria2Script%"
+"%aria2%" -x16 -s16 -j5 -c -R --max-overall-download-limit=%speedLimit% -d"%destDir%" -i"%aria2Script%"
 if %ERRORLEVEL% GTR 0 goto DOWNLOAD_ERROR
 
 set esdsFound=0

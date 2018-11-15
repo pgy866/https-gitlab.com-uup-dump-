@@ -12,11 +12,11 @@ Execution_Level=4
 Set_Version_Info=1
 Company_Name=UUP dump authors
 File_Description=UUP dump downloader
-File_Version=1.0.0.1003
+File_Version=1.0.0.1004
 Inc_File_Version=0
 Legal_Copyright=(c) 2018 UUP dump authors
 Product_Name=UUP dump downloader
-Product_Version=1.0.0.1003
+Product_Version=1.0.0.1004
 [ICONS]
 Icon_1=%In_Dir%\files\icon.ico
 Icon_2=0
@@ -35,13 +35,11 @@ SetBatchLines -1
 #NoTrayIcon
 #SingleInstance off
 
-Version = 1.0.0-beta.3
+Version = 1.0.0-beta.4
 AppNameOnly = UUP dump downloader
 
 AppName = %AppNameOnly% v%version%
 UserAgent = %AppNameOnly%/%version%
-
-BaseDirName = $UUPDUMP
 
 if A_IsAdmin = 0
 {
@@ -59,9 +57,24 @@ if A_OSVersion in WIN_NT4,WIN_95,WIN_98,WIN_ME,WIN_2000,WIN_XP,WIN_2003,WIN_VIST
 
 CurrentPid := DllCall("GetCurrentProcessId")
 
-SplitPath, A_ScriptFullPath,,,,, ScriptDrive
-BaseDir = %ScriptDrive%\%BaseDirName%
+SplitPath, A_ScriptFullPath,, ScriptDir,, ScriptNameNoExt, ScriptDrive
 WorkDir := CreateWorkDir(ScriptDrive)
+
+IniConfig := ScriptDir "\" ScriptNameNoExt ".ini"
+DefaultDir := A_ScriptDir
+SpeedLimit = 0
+
+If(FileExist(IniConfig))
+{
+    IniRead, NewSpeedLimit, %IniConfig%, Config, SpeedLimit
+    IniRead, NewDefaultDir, %IniConfig%, Config, DefaultDir
+
+    If(NewSpeedLimit != "ERROR")
+        SpeedLimit := NewSpeedLimit
+
+    If(NewDefaultDir != "ERROR")
+        DefaultDir := NewDefaultDir
+}
 
 Gui Font, s9, Segoe UI
 Gui Font
@@ -78,7 +91,7 @@ Gui Add, DropDownList, x264 y175 w224 +AltSubmit +Disabled vEditionSelect gEditi
 Gui Add, GroupBox, x16 y60 w480 h60, Build selection
 Gui Add, GroupBox, x16 y132 w480 h80, Language and edition
 Gui Add, GroupBox, x16 y226 w480 h88, Save options
-Gui Add, Edit, x24 y251 w376 h22 vDestinationLocation, %A_ScriptDir%
+Gui Add, Edit, x24 y251 w376 h22 vDestinationLocation, %DefaultDir%
 Gui Add, Button, x408 y250 w80 h24 gFindFolder, &Browse...
 Gui Add, Checkbox, x24 y282 w224 h24 vProcessSaveUUP gChangeStateOfSkipConversionButton, Save UUPs to "UUPs" subdirectory
 Gui Add, Checkbox, x264 y282 w224 h24 vProcessSkipConversion +Disabled, Skip UUP to ISO conversion
@@ -278,7 +291,7 @@ StartProcess:
     Gui ProgressText: Destroy
     ProgressTextEdit := ""
 
-    RunWait, %ComSpec% /c %DownloadScript%
+    RunWait, %ComSpec% /c %DownloadScript% %SpeedLimit%
 
     if ErrorLevel <> 0
     {
@@ -335,7 +348,7 @@ KillApplication:
     Progress, off
     Gui Destroy
 
-    CleanWorkDir(WorkDir, BaseDir)
+    FileRemoveDir, %WorkDir%, 1
     ExitApp
 Return
 
@@ -353,20 +366,19 @@ Return
 #If
 
 CreateWorkDir(Loc) {
-    Global BaseDirName, BaseDir, CurrentDrive
+    Global CurrentDrive
 
     SplitPath, Loc,,,,, Drive
-    BaseDir = %Drive%\%BaseDirName%
     CurrentDrive = %Drive%
 
     Instance := 0
     Loop {
         Instance++
-        WorkDir = %BaseDir%\%Instance%
+        WorkDir := Drive  "\$UUPDUMP." RandomHex(16)
     } until !FileExist(WorkDir)
 
     FileCreateDir, %WorkDir%
-    FileSetAttrib, +H, %BaseDir%
+    FileSetAttrib, +H, %WorkDir%
 
     IfNotExist, %WorkDir%
     {
@@ -378,14 +390,12 @@ CreateWorkDir(Loc) {
 }
 
 MoveWorkDir(Loc) {
-    Global WorkDir, BaseDir
+    Global WorkDir
 
-    OldBaseDir := BaseDir
     NewWorkDir := CreateWorkDir(Loc)
     FileCopyDir, %WorkDir%, %NewWorkDir%, 1
     SetWorkingDir %NewWorkDir%
-
-    CleanWorkDir(WorkDir, OldBaseDir)
+    FileRemoveDir, %WorkDir%, 1
 
     WorkDir := NewWorkDir
 }
@@ -633,20 +643,6 @@ MoveFileToLocation(Dest, File) {
     FileMove, %File%, %NewFile%
 }
 
-CleanWorkDir(WorkDir, BaseDir) {
-    FileRemoveDir %WorkDir%, 1
-
-    Loop, Files, %BaseDir%\*, D
-    {
-        DirectoryHasItems = 1
-        Break
-    }
-
-    if(!DirectoryHasItems) {
-        FileRemoveDir %BaseDir%, 1
-    }
-}
-
 TaskDialog(Instruction, Content := "", Title := "", Buttons := 1, IconID := 0, IconRes := "", Owner := 0x10010) {
     Local hModule, LoadLib, Ret
 
@@ -690,4 +686,18 @@ UrlGet(URL, Method) {
         Return WebRequest.Status
 
     Return WebRequest.ResponseText
+}
+
+RandomHex(Num) {
+    Chars = 0123456789abcdef
+    MaxChars := StrLen(Chars)
+
+    String := ""
+    Loop %Num%
+    {
+        Random, rand, 0, MaxChars
+        String .= SubStr(Chars, rand, 1)
+    }
+
+    Return String
 }
