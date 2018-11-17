@@ -12,11 +12,11 @@ Execution_Level=4
 Set_Version_Info=1
 Company_Name=UUP dump authors
 File_Description=UUP dump downloader
-File_Version=1.0.0.1004
+File_Version=1.0.0.1005
 Inc_File_Version=0
 Legal_Copyright=(c) 2018 UUP dump authors
 Product_Name=UUP dump downloader
-Product_Version=1.0.0.1004
+Product_Version=1.0.0.1005
 [ICONS]
 Icon_1=%In_Dir%\files\icon.ico
 Icon_2=0
@@ -35,15 +35,22 @@ SetBatchLines -1
 #NoTrayIcon
 #SingleInstance off
 
-Version = 1.0.0-beta.4
+Version = 1.0.0-beta.5
 AppNameOnly = UUP dump downloader
 
 AppName = %AppNameOnly% v%version%
 UserAgent = %AppNameOnly%/%version%
 
+If !A_IsCompiled
+{
+    Menu, Tray, Icon, %A_ScriptDir%\files\icon.ico
+}
+
+Gui, +OwnDialogs
+
 if A_IsAdmin = 0
 {
-    MsgBox, 16, %AppName%, This application needs to be run as administrator.
+    MsgBox, 16, %AppName%, This application needs to be run as an administrator.
     ExitApp
 }
 
@@ -53,12 +60,11 @@ if A_OSVersion in WIN_NT4,WIN_95,WIN_98,WIN_ME,WIN_2000,WIN_XP,WIN_2003,WIN_VIST
     ExitApp
 }
 
-#Include lib\Subprocess.ahk
+#Include %A_ScriptDir%\lib\Subprocess.ahk
 
 CurrentPid := DllCall("GetCurrentProcessId")
 
-SplitPath, A_ScriptFullPath,, ScriptDir,, ScriptNameNoExt, ScriptDrive
-WorkDir := CreateWorkDir(ScriptDrive)
+SplitPath, A_ScriptFullPath,, ScriptDir,, ScriptNameNoExt
 
 IniConfig := ScriptDir "\" ScriptNameNoExt ".ini"
 DefaultDir := A_ScriptDir
@@ -76,8 +82,18 @@ If(FileExist(IniConfig))
         DefaultDir := NewDefaultDir
 }
 
-Gui Font, s9, Segoe UI
-Gui Font
+StringReplace, Arg1, 1, "
+If Arg1 !=
+    DefaultDir := Arg1
+
+If(!FileExist(DefaultDir))
+{
+    DefaultDir := A_ScriptDir
+}
+
+SplitPath, DefaultDir,,,,, DefaultDrive
+WorkDir := CreateWorkDir(DefaultDrive)
+
 Gui Font, s16, Segoe UI
 Gui Add, Text, x16 y13 w480 h32 +0x200 +Center, %AppName%
 Gui Font
@@ -110,11 +126,18 @@ PrepareEnv:
     FileCreateDir, files
     Progress, 0 WM400 C00 ZH16 AM R0-10001, , Preparing working directory..., Please wait..., Segoe UI
     FileInstall, files\7za.exe, %WorkDir%\files\7za.exe
-    FileInstall, files\workdir.7z, %WorkDir%\workdir.7z
+
+    If(!A_IsCompiled && !FileExist(A_ScriptDir "\files\workdir.7z"))
+    {
+        FileCopyDir, %A_ScriptDir%\files\workdir, %WorkDir%, 1
+    } else {
+        FileInstall, files\workdir.7z, %WorkDir%\workdir.7z
+        RunWait, files\7za.exe x workdir.7z, , Hide
+        FileDelete, workdir.7z
+    }
+
     FileInstall, files\converter.7z, %WorkDir%\converter.7z
-    RunWait, files\7za.exe x workdir.7z, , Hide
     RunWait, files\7za.exe x converter.7z, , Hide
-    FileDelete, workdir.7z
     FileDelete, converter.7z
 
     Command = %ComSpec% /c files\php\php.exe -c files\php\php.ini -r "echo 'PHPTESTSUCCESS';"
@@ -412,7 +435,10 @@ ShowBuildToolTip(CtrlHwnd) {
 }
 
 FindFolder() {
+    Gui, +Disabled
     FileSelectFolder, DestinationLocation, , 3, Browse for destination location of ISO image
+    Gui, -Disabled
+    Gui, Show
 
     if DestinationLocation =
         Return

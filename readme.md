@@ -15,6 +15,3 @@ To build this you need the following:
   installed
 
 To build run `build\build.cmd`.
-
-If you want to run ahk version anyway, you need to prepare working directory
-archive. To do so, run `build\prepare.cmd`.
