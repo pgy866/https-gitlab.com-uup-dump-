@@ -12,11 +12,11 @@ Execution_Level=4
 Set_Version_Info=1
 Company_Name=UUP dump authors
 File_Description=UUP dump downloader
-File_Version=1.0.0.1006
+File_Version=1.0.0.1007
 Inc_File_Version=0
 Legal_Copyright=(c) 2018 UUP dump authors
 Product_Name=UUP dump downloader
-Product_Version=1.0.0.1006
+Product_Version=1.0.0.1007
 [ICONS]
 Icon_1=%In_Dir%\files\icon.ico
 Icon_2=0
@@ -35,7 +35,7 @@ SetBatchLines -1
 #NoTrayIcon
 #SingleInstance off
 
-Version = 1.0.0-beta.6
+Version = 1.0.0-beta.7
 AppNameOnly = UUP dump downloader
 
 AppName = %AppNameOnly% v%version%
@@ -140,10 +140,8 @@ PrepareEnv:
     RunWait, files\7za.exe x converter.7z, , Hide
     FileDelete, converter.7z
 
-    Run, %WorkDir%\%PhpRunCmd%, %WorkDir%, Hide, PhpPid
-    PHPTEST := UrlGet("http://127.0.0.1:" PhpPort "/test.php", "GET")
-
-    if(PHPTEST != "PHPTESTSUCCESS")
+    RunWait, %WorkDir%\files\php\php.exe -c files\php\php.ini -r "die(0);", %WorkDir%, UseErrorLevel Hide
+    if ErrorLevel <> 0
     {
         MsgBox, 16, Error,
 (
@@ -162,6 +160,8 @@ The application will close.
 
         gosub, KillApplication
     }
+
+    Run, %WorkDir%\%PhpRunCmd%, %WorkDir%, Hide, PhpPid
 
     Progress, 1001
     Progress, 1000, , Retrieving API...
