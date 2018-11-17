@@ -1,23 +1,8 @@
 <?php
 require_once dirname(__FILE__).'/../api/shared/main.php';
 
-function downloadFile($url, $location) {
-    $file = fopen($location, 'w+');
-    $req = curl_init($url);
-
-    curl_setopt($req, CURLOPT_HEADER, 0);
-    curl_setopt($req, CURLOPT_FILE, $file);
-    curl_setopt($req, CURLOPT_ENCODING, '');
-    curl_setopt($req, CURLOPT_FOLLOWLOCATION, 1);
-    curl_setopt($req, CURLOPT_SSL_VERIFYPEER, 0);
-
-    curl_exec($req);
-    curl_close($req);
-    fclose($file);
-}
-
 function throwError($errorCode) {
-    switch ($errorCode) {
+       switch ($errorCode) {
         case 'ERROR':
             $errorFancy = 'Generic error.';
             break;
@@ -59,6 +44,9 @@ function throwError($errorCode) {
             break;
         case 'NO_UPDATE_FOUND':
             $errorFancy = 'Server did not return any updates.';
+            break;
+        case 'XML_PARSE_ERROR':
+            $errorFancy = 'Parsing of response XML has failed. This may indicate a temporary problem with Microsoft servers. Try again later.';
             break;
         case 'EMPTY_FILELIST':
             $errorFancy = 'Server has returned an empty list of files.';
@@ -107,7 +95,12 @@ function throwError($errorCode) {
             break;
     }
 
-    consoleLogger('ERROR: '.$errorFancy);
-    die(E_ERROR);
+    logToFile('ERROR: '.$errorFancy); 
+    die('ERROR');
 }
-?>
+
+function logToFile($message) {
+    $currTime = '['.date('Y-m-d H:i:s T', time()).'] ';
+    $msg = $currTime.$message;
+    file_put_contents('../uupdump.log', $msg."\n", FILE_APPEND);
+}

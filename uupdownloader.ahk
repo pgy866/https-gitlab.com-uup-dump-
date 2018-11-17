@@ -12,11 +12,11 @@ Execution_Level=4
 Set_Version_Info=1
 Company_Name=UUP dump authors
 File_Description=UUP dump downloader
-File_Version=1.0.0.1005
+File_Version=1.0.0.1006
 Inc_File_Version=0
 Legal_Copyright=(c) 2018 UUP dump authors
 Product_Name=UUP dump downloader
-Product_Version=1.0.0.1005
+Product_Version=1.0.0.1006
 [ICONS]
 Icon_1=%In_Dir%\files\icon.ico
 Icon_2=0
@@ -35,7 +35,7 @@ SetBatchLines -1
 #NoTrayIcon
 #SingleInstance off
 
-Version = 1.0.0-beta.5
+Version = 1.0.0-beta.6
 AppNameOnly = UUP dump downloader
 
 AppName = %AppNameOnly% v%version%
@@ -60,9 +60,9 @@ if A_OSVersion in WIN_NT4,WIN_95,WIN_98,WIN_ME,WIN_2000,WIN_XP,WIN_2003,WIN_VIST
     ExitApp
 }
 
-#Include %A_ScriptDir%\lib\Subprocess.ahk
-
 CurrentPid := DllCall("GetCurrentProcessId")
+Random, PhpPort, 49152, 65535
+PhpRunCmd = files\php\php.exe -c files\php\php.ini -S 127.0.0.1:%PhpPort% -t src
 
 SplitPath, A_ScriptFullPath,, ScriptDir,, ScriptNameNoExt
 
@@ -140,12 +140,8 @@ PrepareEnv:
     RunWait, files\7za.exe x converter.7z, , Hide
     FileDelete, converter.7z
 
-    Command = %ComSpec% /c files\php\php.exe -c files\php\php.ini -r "echo 'PHPTESTSUCCESS';"
-    Proc := Subprocess_Run(Command)
-    while(Proc.Status == 0)
-        Sleep, 10
-
-    PHPTEST := Proc.StdOut.ReadAll()
+    Run, %WorkDir%\%PhpRunCmd%, %WorkDir%, Hide, PhpPid
+    PHPTEST := UrlGet("http://127.0.0.1:" PhpPort "/test.php", "GET")
 
     if(PHPTEST != "PHPTESTSUCCESS")
     {
@@ -179,12 +175,7 @@ The application will close.
     Progress, 6000, , Retrieving list of builds...
     Sleep, 1
 
-    Command = %ComSpec% /c files\php\php.exe -c files\php\php.ini src\apiver.php
-    Proc := Subprocess_Run(Command)
-    while(Proc.Status == 0)
-        Sleep, 10
-
-    APIVersion := Proc.StdOut.ReadAll()
+    APIVersion := UrlGet("http://127.0.0.1:" PhpPort "/apiver.php", "GET")
 
     BuildIDs := PopulateBuildList()
     Progress, 10001
@@ -273,46 +264,31 @@ StartProcess:
     CheckWorkDirLocation(DestinationLocation)
 
     Gui, +Disabled
-    Gui ProgressText: -MinimizeBox -MaximizeBox -SysMenu
-    Gui ProgressText: Font, s9, Segoe UI
-    Gui ProgressText: Add, Edit, x8 y31 w400 h155 vProgressTextEdit
-    Gui ProgressText: Add, Text, x8 y7 w400 h23, Retrieving list of files...
-    Gui ProgressText: Add, Progress, x8 y193 w400 h16 -Smooth +0x8 vProgressTextProgress, 0
+    Gui ProgressOfGet: -MinimizeBox -MaximizeBox -SysMenu
+    Gui ProgressOfGet: Font, s9, Segoe UI
+    Gui ProgressOfGet: Add, Text, x8 y7 w300 h23, Retrieving list of files...
+    Gui ProgressOfGet: Add, Progress, x8 y28 w300 h16 -Smooth +0x8 vProgressOfGetProgress, 0
+    Gui ProgressOfGet: Show, w316 h52, Please wait...
+    SetTimer, UpdateProgressOfGetProgress, 33
 
-    Gui ProgressText: Show, w416 h217, Please wait...
+    AriaScript := UrlGet("http://127.0.0.1:" PhpPort "/get.php?id=" SelectedBuild "&pack=" SelectedLang "&edition=" SelectedEdition, "GET")
 
-    Command = %ComSpec% /c files\php\php.exe -c files\php\php.ini src\get.php %SelectedBuild% %SelectedLang% %SelectedEdition% 1>files\aria2_script.txt
-    Proc := Subprocess_Run(Command)
-    while(Proc.Status == 0) {
-        Proc.StdErr.Peek(,,,AvailableData)
-        If(AvailableData) {
-            ReadData := Proc.StdErr.Read(AvailableData)
-            ProgressTextEdit := ProgressTextEdit ReadData
-            GuiControl, ProgressText:, ProgressTextEdit, %ProgressTextEdit%
-            FileAppend, %ReadData%, files\uupdump.log
-        }
-        GuiControl, ProgressText:, ProgressTextProgress, 0
-        Sleep, 33
-    }
-
-    ReadData := Proc.StdErr.ReadAll()
-    ProgressTextEdit := ProgressTextEdit ReadData
-    GuiControl, ProgressText:, ProgressTextEdit, %ProgressTextEdit%
-    FileAppend, %ReadData%, files\uupdump.log
-
-    if ErrorLevel <> 0
+    if(AriaScript == "ERROR")
     {
-        Gui ProgressText: Destroy
+        Gui ProgressOfGet: Destroy
         MsgBox, 16, Error, Failed to get list of available files. Selected build may be no longer downloadable.
         Gui, -Disabled
         Gui, Show
         Return
     }
 
+    FileDelete, files\aria2_script.txt
+    FileAppend, %AriaScript%, files\aria2_script.txt
+
     Gui, Hide
     Gui, -Disabled
-    Gui ProgressText: Destroy
-    ProgressTextEdit := ""
+    SetTimer, UpdateProgressOfGetProgress, Off
+    Gui ProgressOfGet: Destroy
 
     RunWait, %ComSpec% /c %DownloadScript% %SpeedLimit%
 
@@ -371,12 +347,17 @@ KillApplication:
     Progress, off
     Gui Destroy
 
+    Process, Close, %PhpPid%
     FileRemoveDir, %WorkDir%, 1
     ExitApp
 Return
 
-ProgressTextGuiClose:
+ProgressOfGetGuiClose:
     Return
+
+UpdateProgressOfGetProgress:
+    GuiControl ProgressOfGet:, ProgressOfGetProgress, 0
+Return
 
 #If WinActive("ahk_pid " CurrentPid)
 !D::
@@ -389,7 +370,7 @@ Return
 #If
 
 CreateWorkDir(Loc) {
-    Global CurrentDrive
+    Global CurrentDrive, PhpPid
 
     SplitPath, Loc,,,,, Drive
     CurrentDrive = %Drive%
@@ -413,14 +394,17 @@ CreateWorkDir(Loc) {
 }
 
 MoveWorkDir(Loc) {
-    Global WorkDir
+    Global WorkDir, PhpPid, PhpRunCmd
 
+    Process, Close, %PhpPid%
     NewWorkDir := CreateWorkDir(Loc)
+
     FileCopyDir, %WorkDir%, %NewWorkDir%, 1
     SetWorkingDir %NewWorkDir%
     FileRemoveDir, %WorkDir%, 1
 
     WorkDir := NewWorkDir
+    Run, %WorkDir%\%PhpRunCmd%, %WorkDir%, Hide, PhpPid
 }
 
 ShowBuildToolTip(CtrlHwnd) {
@@ -508,15 +492,8 @@ PopulateBuildList() {
 }
 
 PopulateLangList(SelectedBuild) {
-    Command = %ComSpec% /c files\php\php.exe -c files\php\php.ini src\listlangs.php %SelectedBuild%
-    Proc := Subprocess_Run(Command)
-
-    while(Proc.Status == 0)
-        Sleep, 10
-
-    Output := Proc.StdOut.ReadAll()
-    StdErr := Proc.StdErr.ReadAll()
-    FileAppend, %StdErr%, files\uupdump.log
+    Global PhpPort
+    Output := UrlGet("http://127.0.0.1:" PhpPort "/listlangs.php?id=" SelectedBuild, "GET")
 
     GuiControl, , LangSelect, |
     LangList =
@@ -552,17 +529,9 @@ PopulateLangList(SelectedBuild) {
 }
 
 PopulateEditionList(SelectedBuild, Lang) {
-    Global LangCodes, LangSelect
+    Global LangCodes, LangSelect, PhpPort
 
-    Command = %ComSpec% /c files\php\php.exe -c files\php\php.ini src\listeditions.php %Lang% %SelectedBuild%
-    Proc := Subprocess_Run(Command)
-
-    while(Proc.Status == 0)
-        Sleep, 10
-
-    Output := Proc.StdOut.ReadAll()
-    StdErr := Proc.StdErr.ReadAll()
-    FileAppend, %StdErr%, files\uupdump.log
+    Output := UrlGet("http://127.0.0.1:" PhpPort "/listeditions.php?id=" SelectedBuild "&pack=" Lang, "GET")
 
     Gui, Submit, NoHide
     SelectedLang := LangCodes[LangSelect]
@@ -606,12 +575,12 @@ GetFileInfoForUpdate(Update) {
     Sleep, 16
     Gui, +Disabled
 
-    IfNotExist fileinfo
+    IfNotExist src\fileinfo
     {
-        FileCreateDir fileinfo
+        FileCreateDir src\fileinfo
     }
 
-    IfNotExist fileinfo\%Update%.json
+    IfNotExist src\fileinfo\%Update%.json
     {
         Response := UrlGet("https://gitlab.com/uup-dump/fileinfo/raw/master/" Update ".json", "HEAD")
 
@@ -624,18 +593,18 @@ GetFileInfoForUpdate(Update) {
         }
         Progress, 1001
         Progress, 1000
-        URLDownloadToFile, https://gitlab.com/uup-dump/fileinfo/raw/master/%Update%.json, fileinfo\%Update%.json
+        URLDownloadToFile, https://gitlab.com/uup-dump/fileinfo/raw/master/%Update%.json, src\fileinfo\%Update%.json
     }
 
     Progress, 5001
     Progress, 5000, , Retrieving packs...
 
-    IfNotExist packs
+    IfNotExist src\packs
     {
-        FileCreateDir packs
+        FileCreateDir src\packs
     }
 
-    IfNotExist packs\%Update%.json.gz
+    IfNotExist src\packs\%Update%.json.gz
     {
         Response := UrlGet("https://gitlab.com/uup-dump/packs/raw/master/" Update ".json.gz", "HEAD")
 
@@ -643,7 +612,7 @@ GetFileInfoForUpdate(Update) {
         {
             Progress, 6001
             Progress, 6000
-            URLDownloadToFile, https://gitlab.com/uup-dump/packs/raw/master/%Update%.json.gz, packs\%Update%.json.gz
+            URLDownloadToFile, https://gitlab.com/uup-dump/packs/raw/master/%Update%.json.gz, src\packs\%Update%.json.gz
         }
     }
 
@@ -700,7 +669,7 @@ TaskDialog(Instruction, Content := "", Title := "", Buttons := 1, IconID := 0, I
 
 UrlGet(URL, Method) {
     Global UserAgent
-    WebRequest := ComObjCreate("MSXML2.XMLHTTP.3.0")
+    WebRequest := ComObjCreate("MSXML2.ServerXMLHTTP.6.0")
     WebRequest.Open(Method, URL, true)
     WebRequest.setRequestHeader("User-Agent", UserAgent)
     WebRequest.Send()

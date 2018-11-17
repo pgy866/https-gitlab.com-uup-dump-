@@ -1,12 +1,13 @@
 <?php
-$updateId = isset($argv[1]) ? $argv[1] : 'c2a1d787-647b-486d-b264-f90f3782cdc6';
-$usePack = isset($argv[2]) ? $argv[2] : 0;
-$desiredEdition = isset($argv[3]) ? $argv[3] : 0;
-$simple = isset($argv[4]) ? $argv[4] : 0;
+$updateId = isset($_GET['id']) ? $_GET['id'] : 'c2a1d787-647b-486d-b264-f90f3782cdc6';
+$usePack = isset($_GET['pack']) ? $_GET['pack'] : 0;
+$desiredEdition = isset($_GET['edition']) ? $_GET['edition'] : 0;
+$simple = isset($_GET['simple']) ? $_GET['simple'] : 0;
 
 require_once 'api/get.php';
 require_once 'shared/main.php';
 
+logToFile('Attempting to get list of files for '.$updateId.' '.$usePack.' '.$desiredEdition.'...');
 $files = uupGetFiles($updateId, $usePack, $desiredEdition);
 if(isset($files['error'])) {
     throwError($files['error']);
@@ -14,6 +15,8 @@ if(isset($files['error'])) {
 
 $files = $files['files'];
 $filesKeys = array_keys($files);
+
+logToFile('API returned '.count($files).' files for '.$updateId.' '.$usePack.' '.$desiredEdition);
 
 function sortBySize($a, $b) {
     global $files;

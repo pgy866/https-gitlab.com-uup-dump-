@@ -1,8 +1,9 @@
 <?php
-$lang = isset($argv[1]) ? $argv[1] : 'en-us';
-$updateId = isset($argv[2]) ? $argv[2] : 0;
+$lang = isset($_GET['pack']) ? $_GET['pack'] : 'en-us';
+$updateId = isset($_GET['id']) ? $_GET['id'] : 0;
 
 require_once 'api/listeditions.php';
+require_once 'shared/main.php';
 
 $editions = uupListEditions($lang, $updateId);
 if(isset($editions['error'])) {
@@ -12,7 +13,7 @@ if(isset($editions['error'])) {
 $editions = $editions['editionFancyNames'];
 asort($editions);
 
-consoleLogger('API returned '.count($editions).' editions for '.$updateId.' '.$lang);
+logToFile('API returned '.count($editions).' editions for '.$updateId.' '.$lang);
 
 foreach($editions as $key => $val) {
     echo $key;
