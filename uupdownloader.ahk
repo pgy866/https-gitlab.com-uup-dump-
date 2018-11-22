@@ -12,11 +12,11 @@ Execution_Level=4
 Set_Version_Info=1
 Company_Name=UUP dump authors
 File_Description=UUP dump downloader
-File_Version=1.0.0.1007
+File_Version=1.0.0.2001
 Inc_File_Version=0
 Legal_Copyright=(c) 2018 UUP dump authors
 Product_Name=UUP dump downloader
-Product_Version=1.0.0.1007
+Product_Version=1.0.0.2001
 [ICONS]
 Icon_1=%In_Dir%\files\icon.ico
 Icon_2=0
@@ -35,7 +35,7 @@ SetBatchLines -1
 #NoTrayIcon
 #SingleInstance off
 
-Version = 1.0.0-beta.7
+Version = 1.0.0-rc.1
 AppNameOnly = UUP dump downloader
 
 AppName = %AppNameOnly% v%version%
@@ -58,6 +58,22 @@ if A_OSVersion in WIN_NT4,WIN_95,WIN_98,WIN_ME,WIN_2000,WIN_XP,WIN_2003,WIN_VIST
 {
     MsgBox, 16, %AppName%, This application requires Windows 7 or later.
     ExitApp
+}
+
+if A_OSVersion in WIN_7,WIN_8,WIN_8.1
+{
+RegRead, KitsRootWow, HKLM\Software\Wow6432Node\Microsoft\Windows Kits\Installed Roots, KitsRoot10
+RegRead, KitsRoot, HKLM\Software\Microsoft\Windows Kits\Installed Roots, KitsRoot10
+
+if (KitsRoot == "" && KitsRootWow == "")
+    MsgBox, 64, %AppName%,
+(
+We've detected that you are using older version of Windows without having Windows 10 ADK installed. Due to this the resulting ISO image may be created incorrectly.
+
+To ensure that the process is successful, please install Windows 10 ADK or use this application on Windows 10.
+
+Click OK to continue.
+)
 }
 
 CurrentPid := DllCall("GetCurrentProcessId")

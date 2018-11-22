@@ -1,6 +1,7 @@
 @echo off
 cd /d "%~dp0"
 SETLOCAL ENABLEDELAYEDEXPANSION
+title UUP dump downloader
 
 set "aria2=files\aria2\aria2c.exe"
 set "a7z=files\7za.exe"
