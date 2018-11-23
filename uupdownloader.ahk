@@ -12,11 +12,11 @@ Execution_Level=4
 Set_Version_Info=1
 Company_Name=UUP dump authors
 File_Description=UUP dump downloader
-File_Version=1.0.0.2001
+File_Version=1.0.0.5000
 Inc_File_Version=0
-Legal_Copyright=(c) 2018 UUP dump authors
+Legal_Copyright=© 2018 UUP dump authors
 Product_Name=UUP dump downloader
-Product_Version=1.0.0.2001
+Product_Version=1.0.0.5000
 [ICONS]
 Icon_1=%In_Dir%\files\icon.ico
 Icon_2=0
@@ -35,7 +35,7 @@ SetBatchLines -1
 #NoTrayIcon
 #SingleInstance off
 
-Version = 1.0.0-rc.1
+Version = 1.0.0
 AppNameOnly = UUP dump downloader
 
 AppName = %AppNameOnly% v%version%
@@ -50,7 +50,7 @@ Gui, +OwnDialogs
 
 if A_IsAdmin = 0
 {
-    MsgBox, 16, %AppName%, This application needs to be run as an administrator.
+    MsgBox, 16, %AppName%, This application requires to be run as an administrator.
     ExitApp
 }
 
@@ -66,14 +66,16 @@ RegRead, KitsRootWow, HKLM\Software\Wow6432Node\Microsoft\Windows Kits\Installed
 RegRead, KitsRoot, HKLM\Software\Microsoft\Windows Kits\Installed Roots, KitsRoot10
 
 if (KitsRoot == "" && KitsRootWow == "")
-    MsgBox, 64, %AppName%,
+    MsgBox, 68, %AppName%,
 (
 We've detected that you are using older version of Windows without having Windows 10 ADK installed. Due to this the resulting ISO image may be created incorrectly.
 
 To ensure that the process is successful, please install Windows 10 ADK or use this application on Windows 10.
 
-Click OK to continue.
+Do you want to continue?
 )
+IfMsgBox, No
+    ExitApp
 }
 
 CurrentPid := DllCall("GetCurrentProcessId")
@@ -148,12 +150,12 @@ PrepareEnv:
         FileCopyDir, %A_ScriptDir%\files\workdir, %WorkDir%, 1
     } else {
         FileInstall, files\workdir.7z, %WorkDir%\workdir.7z
-        RunWait, files\7za.exe x workdir.7z, , Hide
+        RunWait, %WorkDir%\files\7za.exe x workdir.7z, , Hide
         FileDelete, workdir.7z
     }
 
     FileInstall, files\converter.7z, %WorkDir%\converter.7z
-    RunWait, files\7za.exe x converter.7z, , Hide
+    RunWait, %WorkDir%\files\7za.exe x converter.7z, , Hide
     FileDelete, converter.7z
 
     RunWait, %WorkDir%\files\php\php.exe -c files\php\php.ini -r "die(0);", %WorkDir%, UseErrorLevel Hide
@@ -184,7 +186,7 @@ The application will close.
     Sleep, 1
 
     URLDownloadToFile, https://gitlab.com/uup-dump/api/-/archive/master/api-master.zip, api.zip
-    RunWait, files\7za.exe x api.zip, , Hide
+    RunWait, %WorkDir%\files\7za.exe x api.zip, , Hide
     FileMoveDir, api-master, src\api
     FileDelete, api.zip
     Progress, 6001
@@ -267,9 +269,9 @@ StartProcess:
 
     Gui Submit, NoHide
 
-    DownloadScript = aria2_download.cmd
+    DownloadScript = "%WorkDir%\aria2_download.cmd"
     if ProcessSkipConversion = 1
-        DownloadScript = aria2_download_noconvert.cmd
+        DownloadScript = "%WorkDir%\aria2_download_noconvert.cmd"
 
     IfNotExist, %DestinationLocation%
     {
@@ -474,6 +476,7 @@ CheckWorkDirLocation(DestinationLocation) {
 
 PopulateBuildList() {
     Response := UrlGet("https://uupdump.ml/listid.php", "GET")
+    Response := RegExReplace(Response, "i)Cumulative Update for ")
 
     BuildList =
     BuildIDs := []
