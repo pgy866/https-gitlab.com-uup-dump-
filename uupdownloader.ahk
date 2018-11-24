@@ -12,11 +12,11 @@ Execution_Level=4
 Set_Version_Info=1
 Company_Name=UUP dump authors
 File_Description=UUP dump downloader
-File_Version=1.0.0.5000
+File_Version=1.1.0.0
 Inc_File_Version=0
-Legal_Copyright=© 2018 UUP dump authors
+Legal_Copyright=(c) 2018 UUP dump authors
 Product_Name=UUP dump downloader
-Product_Version=1.0.0.5000
+Product_Version=1.1.0.0
 [ICONS]
 Icon_1=%In_Dir%\files\icon.ico
 Icon_2=0
@@ -27,15 +27,15 @@ Icon_5=0
 * * * Compile_AHK SETTINGS END * * *
 */
 
-#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
-; #Warn  ; Enable warnings to assist with detecting common errors.
-SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
-SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
+#NoEnv
+SendMode Input
+SetWorkingDir %A_ScriptDir%
+
 SetBatchLines -1
 #NoTrayIcon
 #SingleInstance off
 
-Version = 1.0.0
+Version = 1.1.0-alpha
 AppNameOnly = UUP dump downloader
 
 AppName = %AppNameOnly% v%version%
@@ -112,11 +112,27 @@ If(!FileExist(DefaultDir))
 SplitPath, DefaultDir,,,,, DefaultDrive
 WorkDir := CreateWorkDir(DefaultDrive)
 
-Gui Font, s16, Segoe UI
-Gui Add, Text, x16 y13 w480 h32 +0x200 +Center, %AppName%
+
+RegRead, ColorPrevalence, HKCU\SOFTWARE\Microsoft\Windows\DWM, ColorPrevalence
+
+if ColorPrevalence = 1
+{
+    RegRead, Color, HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Accent, AccentPalette
+    Color := SubStr(Color, 25, 6)
+    ColorText = FFFFFF
+} else {
+    Color = FFFFFF
+    ColorText = 000000
+}
+
+Gui Add, Progress, x-2 y-2 w516 h56 c%Color%, 100
+Gui Font, s9 w800 c%ColorText%, Segoe UI
+Gui Add, Text, x16 y8 w480 h23 BackgroundTrans, %AppName%
+Gui Font, w400
+Gui Add, Text, x16 y29 w480 h23 BackgroundTrans vAppInfo, Preparing application to work...
 Gui Font
 Gui Font, s9, Segoe UI
-Gui Add, DropDownList, x24 y85 w396 +AltSubmit +Disabled gShowBuildToolTip vBuildSelect,
+Gui Add, ComboBox, x24 y85 w396 +AltSubmit +Disabled vBuildSelect,
 Gui Add, Button, x428 y84 w60 h25 +Disabled gBuildSelectOK vBuildSelectBtn, &OK
 Gui Add, Text, x24 y152 w224 h23, Language
 Gui Add, DropDownList, x24 y175 w224 +AltSubmit +Disabled vLangSelect gLangSelected
@@ -135,7 +151,7 @@ Gui, +Disabled
 Gui Show, w512 h398, %AppName%
 Gosub, PrepareEnv
 Gui, -Disabled
-Gui, Show, NoActivate, %AppName% (API v%APIVersion%)
+GuiControl, , AppInfo, Using UUP dump API v%APIVersion%
 Return
 
 PrepareEnv:
@@ -195,7 +211,8 @@ The application will close.
 
     APIVersion := UrlGet("http://127.0.0.1:" PhpPort "/apiver.php", "GET")
 
-    BuildIDs := PopulateBuildList()
+    BuildListResponse := UrlGet("https://uupdump.ml/listid.php", "GET")
+    BuildIDs := PopulateBuildList(BuildListResponse)
     Progress, 10001
     Progress, 10000
 
@@ -211,6 +228,18 @@ BuildSelectOK:
     GuiControl, Disable, LangSelect
     GuiControl, Disable, EditionSelect
     GuiControl, Disable, StartProcessBtn
+
+    If(BuildIDs[BuildSelect] == "")
+    {
+        NewBuildIDs := PopulateBuildList(BuildListResponse, BuildSelect)
+        GuiControl, Enable, BuildSelectBtn
+
+        If NewBuildIDs =
+            Return
+
+        BuildIDs := NewBuildIDs
+        Return
+    }
 
     SelectedBuild := BuildIDs[BuildSelect]
     if(GetFileInfoForUpdate(SelectedBuild) = 0)
@@ -425,17 +454,6 @@ MoveWorkDir(Loc) {
     Run, %WorkDir%\%PhpRunCmd%, %WorkDir%, Hide, PhpPid
 }
 
-ShowBuildToolTip(CtrlHwnd) {
-    ControlGetText, CtrlText, , ahk_id %CtrlHwnd%
-    ControlGetPos, X, Y, , , , ahk_id %CtrlHwnd%
-    Y += 24
-    IfWinActive, ahk_class AutoHotkeyGUI
-    {
-        ToolTip %CtrlText%, %X%, %Y%
-        SetTimer, HideToolTip, -2000
-    }
-}
-
 FindFolder() {
     Gui, +Disabled
     FileSelectFolder, DestinationLocation, , 3, Browse for destination location of ISO image
@@ -474,13 +492,16 @@ CheckWorkDirLocation(DestinationLocation) {
     }
 }
 
-PopulateBuildList() {
-    Response := UrlGet("https://uupdump.ml/listid.php", "GET")
+PopulateBuildList(Response, Search = "") {
     Response := RegExReplace(Response, "i)Cumulative Update for ")
+
+    Search := RegExReplace(Search, "([\/\\+\*\?\[\^\]\$\(\)\{\}\=\!\<\>\|\:\-])", "\$1")
+    Search := RegExReplace(Search, " ", ".*")
 
     BuildList =
     BuildIDs := []
 
+    Index = 0
     Loop, Parse, Response, `n
     {
         RegExMatch(A_LoopField, "SO)(.*)\|(.*)\|(.*)\|(.*)", Match)
@@ -489,23 +510,35 @@ PopulateBuildList() {
         ID := Match.3
         Name := Match.4
 
+        if !RegExMatch(Name " " Arch, "i)" Search)
+            Continue
+
+        Index++
+
         if ID !=
         {
-            BuildIDs[A_Index] := ID
+            BuildIDs[Index] := ID
             BuildList .= Name " " Arch "|"
-            if(A_Index = 1)
+            if(Index = 1)
             {
                 BuildList .= "|"
             }
         }
     }
 
-    if BuildList =
+    if (BuildList == "" && Search == "")
     {
         MsgBox, 16, Error, Cannot retrieve list of available builds.
         Gosub, KillApplication
     }
 
+    if (BuildList == "")
+    {
+        MsgBox, 16, Error, There are no builds available for your search
+        Return
+    }
+
+    GuiControl, , BuildSelect, |
     GuiControl, , BuildSelect, %BuildList%
     Return BuildIDs
 }
