@@ -8,7 +8,7 @@ Windows installation images from Unified Update Platform.
 This application uses UUP dump API project as it's backend to generate
 required links. Communication with API is done by using internal PHP webserver.
 
-If you want to browse teporary working directory created by this application
+If you want to browse temporary working directory created by this application
 press `ALT + D` while in main window.
 
 ### AntiVirus false positives
