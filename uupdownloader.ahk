@@ -12,11 +12,11 @@ Execution_Level=4
 Set_Version_Info=1
 Company_Name=UUP dump authors
 File_Description=UUP dump downloader
-File_Version=1.1.0.2
+File_Version=1.1.0.3
 Inc_File_Version=0
 Legal_Copyright=(c) 2018 UUP dump authors
 Product_Name=UUP dump downloader
-Product_Version=1.1.0.2
+Product_Version=1.1.0.3
 [ICONS]
 Icon_1=%In_Dir%\files\icon.ico
 Icon_2=0
@@ -35,7 +35,7 @@ SetBatchLines -1
 #NoTrayIcon
 #SingleInstance off
 
-Version = 1.1.0-alpha.2
+Version = 1.1.0-alpha.3
 AppNameOnly = UUP dump downloader
 
 AppName = %AppNameOnly% v%version%
@@ -133,6 +133,9 @@ RegRead, Locale, HKEY_CURRENT_USER\Control Panel\International, LocaleName
 
 If(Locale == "pl-PL")
     FileInstall, files\lang\pl-PL.ini, %A_Temp%\UUPDUMP_translation.ini
+
+If(FileExist(A_ScriptDir "\UUPDUMP_translation.ini"))
+    FileCopy, %A_ScriptDir%\UUPDUMP_translation.ini, %A_Temp%\UUPDUMP_translation.ini, 1
 
 If(FileExist(A_Temp "\UUPDUMP_translation.ini"))
 {
