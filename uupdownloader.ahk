@@ -12,11 +12,11 @@ Execution_Level=4
 Set_Version_Info=1
 Company_Name=UUP dump authors
 File_Description=UUP dump downloader
-File_Version=1.1.0.3
+File_Version=1.1.0.4
 Inc_File_Version=0
 Legal_Copyright=(c) 2018 UUP dump authors
 Product_Name=UUP dump downloader
-Product_Version=1.1.0.3
+Product_Version=1.1.0.4
 [ICONS]
 Icon_1=%In_Dir%\files\icon.ico
 Icon_2=0
@@ -35,7 +35,7 @@ SetBatchLines -1
 #NoTrayIcon
 #SingleInstance off
 
-Version = 1.1.0-alpha.3
+Version = 1.1.0-alpha.4
 AppNameOnly = UUP dump downloader
 
 AppName = %AppNameOnly% v%version%
@@ -133,6 +133,9 @@ RegRead, Locale, HKEY_CURRENT_USER\Control Panel\International, LocaleName
 
 If(Locale == "pl-PL")
     FileInstall, files\lang\pl-PL.ini, %A_Temp%\UUPDUMP_translation.ini
+
+If(Locale == "nl-NL")
+    FileInstall, files\lang\nl-NL.ini, %A_Temp%\UUPDUMP_translation.ini
 
 If(FileExist(A_ScriptDir "\UUPDUMP_translation.ini"))
     FileCopy, %A_ScriptDir%\UUPDUMP_translation.ini, %A_Temp%\UUPDUMP_translation.ini, 1
@@ -376,7 +379,7 @@ PrepareEnv:
     RunWait, %WorkDir%\files\php\php.exe -c files\php\php.ini -r "die(0);", %WorkDir%, UseErrorLevel Hide
     if ErrorLevel <> 0
     {
-        MsgBox, 16, Error, %text_BackendTestFailed%
+        MsgBox, 16, %text_Error%, %text_BackendTestFailed%
         gosub, KillApplication
     }
 
@@ -494,7 +497,7 @@ StartProcess:
 
     IfNotExist, %DestinationLocation%
     {
-        MsgBox, 16, Error, Destination location does not exist.
+        MsgBox, 16, %text_Error%, %text_DestinationLocationNotExists%
         Return
     }
 
@@ -513,7 +516,7 @@ StartProcess:
     if(AriaScript == "ERROR")
     {
         Gui ProgressOfGet: Destroy
-        MsgBox, 16, Error, %text_BuildNotDownloadable%
+        MsgBox, 16, %text_Error%, %text_BuildNotDownloadable%
         Gui, -Disabled
         Gui, Show
         Return
@@ -604,7 +607,7 @@ Return
 #If
 
 CreateWorkDir(Loc) {
-    Global CurrentDrive, PhpPid, text_CreateDirFail
+    Global CurrentDrive, PhpPid, text_CreateDirFail, text_Error
 
     SplitPath, Loc,,,,, Drive
     CurrentDrive = %Drive%
@@ -620,7 +623,7 @@ CreateWorkDir(Loc) {
 
     IfNotExist, %WorkDir%
     {
-        MsgBox, 16, Error, %text_CreateDirFail%
+        MsgBox, 16, %text_Error%, %text_CreateDirFail%
         ExitApp
     }
 
@@ -657,11 +660,11 @@ FindFolder() {
 }
 
 CheckWorkDirLocation(DestinationLocation) {
-    Global text_DestinationLocationNotExists, text_WorkDirMoveError
+    Global text_DestinationLocationNotExists, text_WorkDirMoveError, text_MovingWorkDir, text_PleaseWait, text_Error
 
     IfNotExist, %DestinationLocation%
     {
-        MsgBox, 16, Error, %text_DestinationLocationNotExists%
+        MsgBox, 16, %text_Error%, %text_DestinationLocationNotExists%
         Return
     }
 
@@ -669,7 +672,7 @@ CheckWorkDirLocation(DestinationLocation) {
     SplitPath, DestinationLocation,,,,, SelectedDrive
     If SelectedDrive =
     {
-        MsgBox, 16, Error, %text_WorkDirMoveError%
+        MsgBox, 16, %text_Error%, %text_WorkDirMoveError%
         Return
     }
 
