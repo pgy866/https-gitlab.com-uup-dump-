@@ -139,6 +139,11 @@ ExtractTranslation(Locale) {
         FileInstall, files\lang\es-ES.ini, %A_Temp%\UUPDUMP_translation.ini
         return
     }
+    Else If(Locale == "it-IT")
+    {
+        FileInstall, files\lang\it-IT.ini, %A_Temp%\UUPDUMP_translation.ini
+        return
+    }
 
     return
 }

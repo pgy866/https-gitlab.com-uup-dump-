@@ -102,10 +102,10 @@ PopulateBuildList(Response, Search = "") {
         if !RegExMatch(Name " " Arch, "i)" Search)
             Continue
 
-        Index++
-
         if ID !=
         {
+            Index++
+
             BuildIDs[Index] := ID
             BuildNames[Index] := Name " " Arch
             BuildList .= Name " " Arch "|"

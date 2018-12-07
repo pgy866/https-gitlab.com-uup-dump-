@@ -12,11 +12,11 @@ Execution_Level=4
 Set_Version_Info=1
 Company_Name=UUP dump authors
 File_Description=UUP dump downloader
-File_Version=1.1.0.6
+File_Version=1.1.0.7
 Inc_File_Version=0
 Legal_Copyright=(c) 2018 UUP dump authors
 Product_Name=UUP dump downloader
-Product_Version=1.1.0.6
+Product_Version=1.1.0.7
 [ICONS]
 Icon_1=%In_Dir%\files\icon.ico
 Icon_2=0
@@ -35,7 +35,7 @@ SetBatchLines -1
 #NoTrayIcon
 #SingleInstance off
 
-Version = 1.1.0-alpha.6
+Version = 1.1.0-alpha.7
 AppNameOnly = UUP dump downloader
 
 AppName = %AppNameOnly% v%version%
@@ -279,7 +279,7 @@ SearchBuilds:
     Gui Submit, NoHide
     NewBuildIDs := PopulateBuildList(BuildListResponse, BuildSearchQuery)
 
-    If NewBuildIDs =
+    If(NewBuildIDs == "")
         Return
 
     BuildIDs := NewBuildIDs
