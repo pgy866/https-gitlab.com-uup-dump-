@@ -12,11 +12,11 @@ Execution_Level=4
 Set_Version_Info=1
 Company_Name=UUP dump authors
 File_Description=UUP dump downloader
-File_Version=1.1.0.7
+File_Version=1.1.0.8
 Inc_File_Version=0
 Legal_Copyright=(c) 2018 UUP dump authors
 Product_Name=UUP dump downloader
-Product_Version=1.1.0.7
+Product_Version=1.1.0.8
 [ICONS]
 Icon_1=%In_Dir%\files\icon.ico
 Icon_2=0
@@ -35,7 +35,7 @@ SetBatchLines -1
 #NoTrayIcon
 #SingleInstance off
 
-Version = 1.1.0-alpha.7
+Version = 1.1.0-alpha.8
 AppNameOnly = UUP dump downloader
 
 AppName = %AppNameOnly% v%version%
@@ -74,6 +74,13 @@ if (KitsRoot == "" && KitsRootWow == "")
 }
 
 #Include %A_ScriptDir%\include\functions.ahk
+
+if(A_Is64bitOS == 1 && A_PtrSize == 4)
+{
+    CmdPath = "%A_WinDir%\Sysnative\cmd.exe"
+} else {
+    CmdPath = "%A_WinDir%\System32\cmd.exe"
+}
 
 CurrentPid := DllCall("GetCurrentProcessId")
 Random, PhpPort, 49152, 65535
@@ -396,7 +403,7 @@ StartProcess:
     SetTimer, UpdateProgressOfGetProgress, Off
     Gui ProgressOfGet: Destroy
 
-    RunWait, %ComSpec% /c %DownloadScript% %SpeedLimit%
+    RunWait, %CmdPath% /c %DownloadScript% %SpeedLimit%
 
     if ErrorLevel <> 0
     {
