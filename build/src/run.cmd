@@ -12,5 +12,5 @@ powershell Start-Process -FilePath '%filePath%' -ArgumentList '%command%' -Verb 
 exit /b
 
 :HAS_ADMIN
-start "%~dp0files\AutoHotkey.exe" "%~dp0files\src\uupdownloader.ahk" "%~dp0"
+start "" "%~dp0files\AutoHotkey.exe" "%~dp0files\src\uupdownloader.ahk" "%~dp0"
 exit /b

@@ -12,11 +12,11 @@ Execution_Level=4
 Set_Version_Info=1
 Company_Name=UUP dump authors
 File_Description=UUP dump downloader
-File_Version=1.0.0.5000
+File_Version=1.0.1.5000
 Inc_File_Version=0
-Legal_Copyright=© 2018 UUP dump authors
+Legal_Copyright=(c) 2018 UUP dump authors
 Product_Name=UUP dump downloader
-Product_Version=1.0.0.5000
+Product_Version=1.0.1.5000
 [ICONS]
 Icon_1=%In_Dir%\files\icon.ico
 Icon_2=0
@@ -35,7 +35,7 @@ SetBatchLines -1
 #NoTrayIcon
 #SingleInstance off
 
-Version = 1.0.0
+Version = 1.0.1
 AppNameOnly = UUP dump downloader
 
 AppName = %AppNameOnly% v%version%
@@ -76,6 +76,13 @@ Do you want to continue?
 )
 IfMsgBox, No
     ExitApp
+}
+
+if(A_Is64bitOS == 1 && A_PtrSize == 4)
+{
+    CmdPath = "%A_WinDir%\Sysnative\cmd.exe"
+} else {
+    CmdPath = "%A_WinDir%\System32\cmd.exe"
 }
 
 CurrentPid := DllCall("GetCurrentProcessId")
