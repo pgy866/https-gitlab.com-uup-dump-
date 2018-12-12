@@ -315,7 +315,7 @@ StartProcess:
     SetTimer, UpdateProgressOfGetProgress, Off
     Gui ProgressOfGet: Destroy
 
-    RunWait, %ComSpec% /c %DownloadScript% %SpeedLimit%
+    RunWait, %CmdPath% /c %DownloadScript% %SpeedLimit%
 
     if ErrorLevel <> 0
     {
