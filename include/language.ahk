@@ -45,6 +45,9 @@ Translation["NoEditions"] := "There are no editions available for this selection
 Translation["RetrievingFileInfo"] := "Retrieving fileinfo..."
 Translation["NoFileinfo"] := "Fileinfo database does not exist for this selection."
 Translation["RetrievingPacks"] := "Retrieving packs..."
+Translation["OldVersion"] := "You are running outdated version of UUP dump downloader. It is recommended to update to latest version."
+Translation["YourVersion"] := "Your version"
+Translation["LatestVersion"] := "Latest version"
 
 Languages := []
 Languages["ar-sa"] := "Arabic (Saudi Arabia)"

@@ -1,3 +1,14 @@
+CheckVersion(Version, VersionCheckUrl) {
+    Global AppName, text_OldVersion, text_LatestVersion, text_YourVersion
+
+    LatestVersion := UrlGet(VersionCheckUrl, "GET")
+    Temp := StrSplit(LatestVersion, "`n")
+    LatestVersion := StrReplace(Temp[1], "`r")
+
+    if(Version != LatestVersion)
+        MsgBox, 64, %AppName%, %text_OldVersion%`n`n%text_YourVersion%: %Version%`n%text_LatestVersion%: %LatestVersion%
+}
+
 CreateWorkDir(Loc) {
     Global CurrentDrive, PhpPid, text_CreateDirFail, text_Error
 
