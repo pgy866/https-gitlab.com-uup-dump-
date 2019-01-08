@@ -44,7 +44,6 @@ MoveWorkDir(Loc) {
     FileRemoveDir, %WorkDir%, 1
 
     WorkDir := NewWorkDir
-    Run, %WorkDir%\%PhpRunCmd%, %WorkDir%, Hide, PhpPid
 }
 
 FindFolder() {

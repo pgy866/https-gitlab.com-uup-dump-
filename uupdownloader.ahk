@@ -35,7 +35,7 @@ SetBatchLines -1
 #NoTrayIcon
 #SingleInstance off
 
-Version = 1.1.0-beta.1
+Version = 1.1.0-beta.2
 AppNameOnly = UUP dump downloader
 
 VersionCheckUrl = https://gitlab.com/uup-dump/downloader/snippets/1792655/raw
@@ -266,6 +266,10 @@ PrepareEnv:
     SplashImage, , , 90`%
 
     CheckVersion(Version, VersionCheckUrl)
+
+    PhpWasRunning := 1
+    SetTimer, MonitorPhp, 50
+
     SplashImage, , , 100`%
 
     GuiControl, Enable, BuildSelect
@@ -444,13 +448,51 @@ StartProcess:
     Gosub, KillApplication
 Return
 
+MonitorPhp:
+    Process, Exist, %PhpPid%
+    If(%ErrorLevel% == 0)
+    {
+        Run, %WorkDir%\%PhpRunCmd%, %WorkDir%, Hide, PhpPid
+
+        Sleep, 100
+        Process, Exist, %PhpPid%
+
+        If(%ErrorLevel% == 0)
+        {
+            MsgBox, 16, %text_Error%, %text_PhpFailedRestart%
+            Gosub KillApplication
+            Return
+        }
+    }
+Return
+
 GuiClose:
 KillApplication:
+    SetTimer, MonitorPhp, Off
     Progress, off
     SplashImage, off
     Gui Destroy
 
-    Process, Close, %PhpPid%
+    i := 0
+    ProcessKilled := 0
+
+    while(i < 10) {
+        Process, Close, %PhpPid%
+
+        If(%ErrorLevel% != 0)
+        {
+            ProcessKilled := 1
+            break
+        }
+
+        i++
+    }
+
+    If(ProcessKilled = 0 && PhpWasRunning)
+    {
+        MsgBox, 16, %text_Error%, %text_PhpFailedClose%
+    }
+
     FileRemoveDir, %WorkDir%, 1
     ExitApp
 Return

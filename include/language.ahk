@@ -48,6 +48,8 @@ Translation["RetrievingPacks"] := "Retrieving packs..."
 Translation["OldVersion"] := "You are running outdated version of UUP dump downloader. It is recommended to update to latest version."
 Translation["YourVersion"] := "Your version"
 Translation["LatestVersion"] := "Latest version"
+Translation["PhpFailedRestart"] := "Failed to restart PHP backend. The application will close."
+Translation["PhpFailedClose"] := "An error occurred during attempt to close PHP backend. Please check if php.exe process is running and terminate it manually.`n`nClick OK after terminating PHP."
 
 Languages := []
 Languages["ar-sa"] := "Arabic (Saudi Arabia)"
