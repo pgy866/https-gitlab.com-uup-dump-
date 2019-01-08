@@ -32,6 +32,21 @@ To build this project into single executable you need the following:
 
 To start build process run `build\build.cmd`.
 
+### What is going on with version numbers of executable?
+Because of limitations of version number string in executable files the version
+numbers are like the folllowing:
+
+major.minor.patch.rel_type
+
+major.minor.patch is typical semantic versioning.
+
+rel_type uses these rules:
+  - rel_type < 1000 means that this is alpha release
+  - rel_type > 1000 and < 2000 means that this is beta release
+  - rel_type > 2000 and < 3000 means that this is release candidate
+  - rel_type > 3000 and < 5000 are reserved for later use
+  - rel_type = 5000 means that this is final release.
+
 ### Projects used in this project
   - aria2 (https://aria2.github.io/)
   - PHP (http://php.net/)

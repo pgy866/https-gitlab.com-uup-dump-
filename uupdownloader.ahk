@@ -12,11 +12,11 @@ Execution_Level=4
 Set_Version_Info=1
 Company_Name=UUP dump authors
 File_Description=UUP dump downloader
-File_Version=1.1.0.1001
+File_Version=1.1.0.1002
 Inc_File_Version=0
 Legal_Copyright=(c) 2019 UUP dump authors
 Product_Name=UUP dump downloader
-Product_Version=1.1.0.1001
+Product_Version=1.1.0.1002
 [ICONS]
 Icon_1=%In_Dir%\files\icon.ico
 Icon_2=0
