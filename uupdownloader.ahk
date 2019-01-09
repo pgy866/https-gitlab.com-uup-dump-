@@ -1,32 +1,3 @@
-/*
- * * * Compile_AHK SETTINGS BEGIN * * *
-
-[AHK2EXE]
-Exe_File=%In_Dir%\uupdownloader.exe
-Alt_Bin=C:\Program Files\AutoHotkey\Compiler\Unicode 32-bit.bin
-No_UPX=1
-Run_Before="build\prepare.cmd"
-Run_After="build\clean.cmd"
-Execution_Level=4
-[VERSION]
-Set_Version_Info=1
-Company_Name=UUP dump authors
-File_Description=UUP dump downloader
-File_Version=1.1.0.1002
-Inc_File_Version=0
-Legal_Copyright=(c) 2019 UUP dump authors
-Product_Name=UUP dump downloader
-Product_Version=1.1.0.1002
-[ICONS]
-Icon_1=%In_Dir%\files\icon.ico
-Icon_2=0
-Icon_3=0
-Icon_4=0
-Icon_5=0
-
-* * * Compile_AHK SETTINGS END * * *
-*/
-
 #NoEnv
 SendMode Input
 SetWorkingDir %A_ScriptDir%
@@ -35,7 +6,7 @@ SetBatchLines -1
 #NoTrayIcon
 #SingleInstance off
 
-Version = 1.1.0-beta.2
+Version = 1.1.0-beta.3
 AppNameOnly = UUP dump downloader
 
 VersionCheckUrl = https://gitlab.com/uup-dump/downloader/snippets/1792655/raw
@@ -77,10 +48,15 @@ CurrentPid := DllCall("GetCurrentProcessId")
 Random, PhpPort, 49152, 65535
 PhpRunCmd = files\php\php.exe -c files\php\php.ini -S 127.0.0.1:%PhpPort% -t src
 
-SplitPath, A_ScriptFullPath,, ScriptDir,, ScriptNameNoExt
+If(ParentExe != "")
+{
+    SplitPath, ParentExe,, ScriptDir,, ScriptNameNoExt
+} else {
+    SplitPath, A_ScriptFullPath,, ScriptDir,, ScriptNameNoExt
+}
 
 IniConfig := ScriptDir "\" ScriptNameNoExt ".ini"
-DefaultDir := A_ScriptDir
+DefaultDir := ScriptDir
 SpeedLimit = 0
 
 If(FileExist(IniConfig))

@@ -25,10 +25,15 @@ Downloads of this application can be found in GitLab tags section.
 https://gitlab.com/uup-dump/downloader/tags
 
 ### Building executable file
-To build this project into single executable you need the following:
-  - [AutoHotkey](https://www.autohotkey.com/download/) installed in `C:\Program Files\AutoHotkey`
-  - [Latest unofficial release of Compile_AHK](https://github.com/mercury233/compile-ahk/releases)
-    installed
+To build this project into single executable you need the following in
+`build\bin` directory:
+
+  - [AutoHotkeyU32.exe](https://www.autohotkey.com/download/) from AutoHotkey
+    zip file
+  - [ResourceHacker.exe](http://www.angusj.com/resourcehacker/) from
+    ResourceHacker zip file
+  - [7zSD.sfx](https://www.7-zip.org/download.html) from 7-Zip LZMA SDK
+    (the file can be found in `bin` directory of sdk archive)
 
 To start build process run `build\build.cmd`.
 
