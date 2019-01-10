@@ -10,7 +10,7 @@ CheckVersion(Version, VersionCheckUrl) {
 }
 
 CreateWorkDir(Loc) {
-    Global CurrentDrive, PhpPid, text_CreateDirFail, text_Error
+    Global CurrentDrive, text_CreateDirFail, text_Error
 
     SplitPath, Loc,,,,, Drive
     CurrentDrive = %Drive%
@@ -34,8 +34,9 @@ CreateWorkDir(Loc) {
 }
 
 MoveWorkDir(Loc) {
-    Global WorkDir, PhpPid, PhpRunCmd
+    Global WorkDir, PhpPid
 
+    SetTimer, MonitorPhp, Off
     Process, Close, %PhpPid%
     NewWorkDir := CreateWorkDir(Loc)
 
@@ -44,6 +45,7 @@ MoveWorkDir(Loc) {
     FileRemoveDir, %WorkDir%, 1
 
     WorkDir := NewWorkDir
+    SetTimer, MonitorPhp, 100
 }
 
 FindFolder() {
