@@ -92,13 +92,14 @@ PopulateBuildList(Response, Search = "") {
     Global BuildNames, text_Error, text_CannotGetBuilds, text_NoSearchResults
 
     Response := RegExReplace(Response, "i)Cumulative Update for ", "Update to ")
+    Response := RegExReplace(Response, "i)Version Next", "Insider Preview")
 
     Search := RegExReplace(Search, "([\/\\+\*\?\[\^\]\$\(\)\{\}\=\!\<\>\|\:\-])", "\$1")
     Search := RegExReplace(Search, " ", ".*")
 
     BuildList =
     BuildIDs := []
-    BuildNames := []
+    BuildNamesTemp := []
 
     Index = 0
     Loop, Parse, Response, `n
@@ -117,7 +118,7 @@ PopulateBuildList(Response, Search = "") {
             Index++
 
             BuildIDs[Index] := ID
-            BuildNames[Index] := Name " " Arch
+            BuildNamesTemp[Index] := Name " " Arch
             BuildList .= Name " " Arch "|"
             if(Index = 1)
             {
@@ -140,6 +141,8 @@ PopulateBuildList(Response, Search = "") {
 
     GuiControl, , BuildSelect, |
     GuiControl, , BuildSelect, %BuildList%
+    BuildNames := BuildNamesTemp
+
     Return BuildIDs
 }
 

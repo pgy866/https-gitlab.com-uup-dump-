@@ -6,7 +6,7 @@ SetBatchLines -1
 #NoTrayIcon
 #SingleInstance off
 
-Version = 1.1.0-beta.3
+Version = 1.1.0-rc.1
 AppNameOnly = UUP dump downloader
 
 VersionCheckUrl = https://gitlab.com/uup-dump/downloader/snippets/1792655/raw
@@ -244,7 +244,7 @@ PrepareEnv:
     CheckVersion(Version, VersionCheckUrl)
 
     PhpWasRunning := 1
-    SetTimer, MonitorPhp, 50
+    SetTimer, MonitorPhp, 100
 
     SplashImage, , , 100`%
 

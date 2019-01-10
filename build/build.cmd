@@ -19,16 +19,16 @@ copy src\run.cmd temp\uupdownloader.cmd
 if NOT EXIST "bin\ResourceHacker.exe" exit /b 1
 if NOT EXIST "bin\7zSD.sfx" exit /b 1
 
-copy ..\sfxbootstrap.ahk temp\files\src
+copy ..\res\sfxbootstrap.ahk temp\files\src
 ..\files\7za.exe -mx9 a ..\temp.7z .\temp\files\*
 rmdir /q /s temp
 mkdir temp
+copy /b bin\7zSD.sfx + src\config.txt + ..\temp.7z temp\uupdownloader.exe
+del ..\temp.7z
 xcopy /cherkyq ..\res temp\
 copy ..\files\icon.ico temp\icon.ico
 cd temp
 ..\bin\ResourceHacker.exe -open resources.rc -save resources.res -action compile
 cd ..
-bin\ResourceHacker.exe -open bin\7zSD.sfx -save temp\7zSD.new -resource temp\resources.res -action addoverwrite
-copy /b temp\7zSD.new + src\config.txt + ..\temp.7z ..\uupdownloader.exe
-del ..\temp.7z
+bin\ResourceHacker.exe -open temp\uupdownloader.exe -save ..\uupdownloader.exe -resource temp\resources.res -action addoverwrite
 rmdir /q /s temp

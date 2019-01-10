@@ -1,4 +1,5 @@
 <?php
+header('Content-Type: text/plain');
 require_once dirname(__FILE__).'/../api/shared/main.php';
 
 function throwError($errorCode) {
