@@ -1,10 +1,4 @@
-#NoEnv
-SendMode Input
-SetWorkingDir %A_ScriptDir%
-
-SetBatchLines -1
-#NoTrayIcon
-#SingleInstance off
+﻿#Include %A_ScriptDir%\include\header.ahk
 
 ScriptPid := GetCurrentProcess()
 ParentPid := GetParentProcess(ScriptPid)

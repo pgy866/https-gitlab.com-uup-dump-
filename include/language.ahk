@@ -1,4 +1,4 @@
-DefaultLanguage = en-US
+﻿DefaultLanguage = en-US
 
 Translation := []
 Translation["NoAdmin"] := "This application requires to be run as an administrator."
@@ -149,14 +149,19 @@ ExtractTranslation(Locale) {
         FileInstall, files\lang\it-IT.ini, %A_Temp%\UUPDUMP_translation.ini
         return
     }
+    Else If(Locale == "hu-HU")
+    {
+        FileInstall, files\lang\hu-HU.ini, %A_Temp%\UUPDUMP_translation.ini
+        return
+    }
 
     return
 }
 
 ExtractTranslation(Locale)
 
-If(FileExist(A_ScriptDir "\UUPDUMP_translation.ini"))
-    FileCopy, %A_ScriptDir%\UUPDUMP_translation.ini, %A_Temp%\UUPDUMP_translation.ini, 1
+If(FileExist(ScriptDir "\UUPDUMP_translation.ini"))
+    FileCopy, %ScriptDir%\UUPDUMP_translation.ini, %A_Temp%\UUPDUMP_translation.ini, 1
 
 If(FileExist(A_Temp "\UUPDUMP_translation.ini"))
 {

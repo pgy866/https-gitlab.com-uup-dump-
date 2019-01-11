@@ -1,4 +1,4 @@
-CheckVersion(Version, VersionCheckUrl) {
+﻿CheckVersion(Version, VersionCheckUrl) {
     Global AppName, text_OldVersion, text_LatestVersion, text_YourVersion
 
     LatestVersion := UrlGet(VersionCheckUrl, "GET")

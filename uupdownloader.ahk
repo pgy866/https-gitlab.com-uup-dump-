@@ -1,20 +1,16 @@
-#NoEnv
-SendMode Input
-SetWorkingDir %A_ScriptDir%
+﻿#Include %A_ScriptDir%\include\header.ahk
+#Include %A_ScriptDir%\include\appinfo.ahk
 
-SetBatchLines -1
-#NoTrayIcon
-#SingleInstance off
-
-Version = 1.1.0-rc.1
-AppNameOnly = UUP dump downloader
-
-VersionCheckUrl = https://gitlab.com/uup-dump/downloader/snippets/1792655/raw
-
-AppName = %AppNameOnly% v%version%
-UserAgent = %AppNameOnly%/%version%
+If(ParentExe != "")
+{
+    SplitPath, ParentExe,, ScriptDir,, ScriptNameNoExt
+} else {
+    SplitPath, A_ScriptFullPath,, ScriptDir,, ScriptNameNoExt
+}
 
 #Include %A_ScriptDir%\include\language.ahk
+
+VersionCheckUrl = https://gitlab.com/uup-dump/downloader/snippets/1792655/raw
 
 If !A_IsCompiled
 {
@@ -47,13 +43,6 @@ if(A_Is64bitOS == 1 && A_PtrSize == 4)
 CurrentPid := DllCall("GetCurrentProcessId")
 Random, PhpPort, 49152, 65535
 PhpRunCmd = files\php\php.exe -c files\php\php.ini -S 127.0.0.1:%PhpPort% -t src
-
-If(ParentExe != "")
-{
-    SplitPath, ParentExe,, ScriptDir,, ScriptNameNoExt
-} else {
-    SplitPath, A_ScriptFullPath,, ScriptDir,, ScriptNameNoExt
-}
 
 IniConfig := ScriptDir "\" ScriptNameNoExt ".ini"
 DefaultDir := ScriptDir
