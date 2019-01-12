@@ -261,9 +261,9 @@ PopulateEditionList(SelectedBuild, Lang) {
 
 GetFileInfoForUpdate(Update) {
     Global text_PleaseWait, text_Error, text_RetrievingFileinfo, text_NoFileinfo, text_RetrievingPacks
-    Progress, 0 WM400 C00 ZH16 AM R0-10001, , %text_RetrievingFileinfo%, %text_PleaseWait%, Segoe UI
-    Sleep, 16
     Gui, +Disabled
+
+    ProgressStyle = WM400 C00 ZH16 AM R0-10001
 
     IfNotExist src\fileinfo
     {
@@ -272,6 +272,7 @@ GetFileInfoForUpdate(Update) {
 
     IfNotExist src\fileinfo\%Update%.json
     {
+        Progress, 0 %ProgressStyle%, , %text_RetrievingFileinfo%, %text_PleaseWait%, Segoe UI
         Response := UrlGet("https://gitlab.com/uup-dump/fileinfo/raw/master/" Update ".json", "HEAD")
 
         if(Response != 200)
@@ -284,10 +285,8 @@ GetFileInfoForUpdate(Update) {
         Progress, 1001
         Progress, 1000
         URLDownloadToFile, https://gitlab.com/uup-dump/fileinfo/raw/master/%Update%.json, src\fileinfo\%Update%.json
+        ProgressStyle =
     }
-
-    Progress, 5001
-    Progress, 5000, , %text_RetrievingPacks%
 
     IfNotExist src\packs
     {
@@ -296,6 +295,8 @@ GetFileInfoForUpdate(Update) {
 
     IfNotExist src\packs\%Update%.json.gz
     {
+        Progress, 5001 %ProgressStyle%, , %text_RetrievingPacks%, %text_PleaseWait%, Segoe UI
+        Progress, 5000
         Response := UrlGet("https://gitlab.com/uup-dump/packs/raw/master/" Update ".json.gz", "HEAD")
 
         if(Response = 200)
@@ -304,10 +305,10 @@ GetFileInfoForUpdate(Update) {
             Progress, 6000
             URLDownloadToFile, https://gitlab.com/uup-dump/packs/raw/master/%Update%.json.gz, src\packs\%Update%.json.gz
         }
-    }
 
-    Progress, 10001
-    Progress, 10000
+        Progress, 10001
+        Progress, 10000
+    }
 
     Gui, -Disabled
     Progress, off
@@ -359,9 +360,10 @@ TaskDialog(Instruction, Content := "", Title := "", Buttons := 1, IconID := 0, I
 
 UrlGet(URL, Method) {
     Global UserAgent
-    WebRequest := ComObjCreate("MSXML2.ServerXMLHTTP.6.0")
+    WebRequest := ComObjCreate("MSXML2.XMLHTTP.6.0")
     WebRequest.Open(Method, URL, true)
     WebRequest.setRequestHeader("User-Agent", UserAgent)
+    WebRequest.SetRequestHeader("If-Modified-Since", "Sat, 1 Jan 1970 00:00:00 GMT")
     WebRequest.Send()
 
     while(WebRequest.readyState != 4)

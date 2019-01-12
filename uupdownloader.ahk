@@ -10,7 +10,7 @@ If(ParentExe != "")
 
 #Include %A_ScriptDir%\include\language.ahk
 
-VersionCheckUrl = https://gitlab.com/uup-dump/downloader/snippets/1792655/raw
+VersionCheckUrl = https://gitlab.com/uup-dump/downloader/snippets/1792654/raw
 
 If !A_IsCompiled
 {
