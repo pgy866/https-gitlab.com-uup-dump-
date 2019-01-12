@@ -1,7 +1,7 @@
 ﻿#Include %A_ScriptDir%\include\header.ahk
 #Include %A_ScriptDir%\include\appinfo.ahk
 
-VersionCheckUrl = https://gitlab.com/uup-dump/downloader/snippets/1792654/raw
+VersionCheckUrl = https://gitlab.com/uup-dump/downloader/snippets/1792655/raw
 
 If(A_IsCompiled)
 {
