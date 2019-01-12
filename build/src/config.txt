@@ -1,3 +1,3 @@
 ;!@Install@!UTF-8!
-RunProgram="AutoHotkey.exe src\sfxbootstrap.ahk"
+RunProgram="files\AutoHotkey.exe sfxbootstrap.ahk"
 ;!@InstallEnd@!

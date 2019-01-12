@@ -1,6 +1,14 @@
 ﻿#Include %A_ScriptDir%\include\header.ahk
 #Include %A_ScriptDir%\include\appinfo.ahk
 
+VersionCheckUrl = https://gitlab.com/uup-dump/downloader/snippets/1792654/raw
+
+If(A_IsCompiled)
+{
+    MsgBox, 16, Unsupported build, The application was built in unsupported way. Please read build instructions in readme.`n`nThe application will be terminated.
+    ExitApp
+}
+
 If(ParentExe != "")
 {
     SplitPath, ParentExe,, ScriptDir,, ScriptNameNoExt
@@ -9,8 +17,6 @@ If(ParentExe != "")
 }
 
 #Include %A_ScriptDir%\include\language.ahk
-
-VersionCheckUrl = https://gitlab.com/uup-dump/downloader/snippets/1792654/raw
 
 If !A_IsCompiled
 {
@@ -42,7 +48,7 @@ if(A_Is64bitOS == 1 && A_PtrSize == 4)
 
 CurrentPid := DllCall("GetCurrentProcessId")
 Random, PhpPort, 49152, 65535
-PhpRunCmd = files\php\php.exe -c files\php\php.ini -S 127.0.0.1:%PhpPort% -t src
+PhpRunCmd = files\php\php.exe -c "%A_ScriptDir%\files\php\php.ini" -S 127.0.0.1:%PhpPort% -t src
 
 IniConfig := ScriptDir "\" ScriptNameNoExt ".ini"
 DefaultDir := ScriptDir
@@ -186,39 +192,24 @@ PrepareEnv:
     GuiControl, Disable, BuildSelectBtn
     GuiControl, Disable, GuiSearchButton
 
-    FileCreateDir, %WorkDir%\files
-    FileInstall, files\splash.png, %WorkDir%\files\splash.png
+    SplashImage, %A_ScriptDir%\files\splash.png, ZX52 ZY12 WM400 FM11 FS9 CWFFFFFF AM, 0`%, %text_Preparing% , %AppName%, Segoe UI
+    FileCopyDir, %A_ScriptDir%\files\workdir, %WorkDir%, 1
+    RunWait, %A_ScriptDir%\files\7za.exe x "%A_ScriptDir%\files\converter.7z", %WorkDir%, Hide
 
-    SplashImage, %WorkDir%\files\splash.png, ZX52 ZY12 WM400 FM11 FS9 CWFFFFFF AM, 0`%, %text_Preparing% , %AppName%, Segoe UI
-    FileInstall, files\7za.exe, %WorkDir%\files\7za.exe
-
-    If(!A_IsCompiled && !FileExist(A_ScriptDir "\files\workdir.7z"))
-    {
-        FileCopyDir, %A_ScriptDir%\files\workdir, %WorkDir%, 1
-    } else {
-        FileInstall, files\workdir.7z, %WorkDir%\workdir.7z
-        RunWait, %WorkDir%\files\7za.exe x workdir.7z, , Hide
-        FileDelete, workdir.7z
-    }
-
-    FileInstall, files\converter.7z, %WorkDir%\converter.7z
-    RunWait, %WorkDir%\files\7za.exe x converter.7z, , Hide
-    FileDelete, converter.7z
-
-    RunWait, %WorkDir%\files\php\php.exe -c files\php\php.ini -r "die(0);", %WorkDir%, UseErrorLevel Hide
+    RunWait, %A_ScriptDir%\files\php\php.exe -c "%A_ScriptDir%\files\php\php.ini" -r "die(0);", %WorkDir%, UseErrorLevel Hide
     if ErrorLevel <> 0
     {
         MsgBox, 16, %text_Error%, %text_BackendTestFailed%
         gosub, KillApplication
     }
 
-    Run, %WorkDir%\%PhpRunCmd%, %WorkDir%, Hide, PhpPid
+    Run, %A_ScriptDir%\%PhpRunCmd%, %WorkDir%, Hide, PhpPid
 
     SplashImage, , , 10`%
     Sleep, 1
 
     URLDownloadToFile, https://gitlab.com/uup-dump/api/-/archive/master/api-master.zip, api.zip
-    RunWait, %WorkDir%\files\7za.exe x api.zip, , Hide
+    RunWait, %A_ScriptDir%\files\7za.exe x api.zip, , Hide
     FileMoveDir, api-master, src\api
     FileDelete, api.zip
     SplashImage, , , 55`%
@@ -417,7 +408,7 @@ MonitorPhp:
     Process, Exist, %PhpPid%
     If(%ErrorLevel% == 0)
     {
-        Run, %WorkDir%\%PhpRunCmd%, %WorkDir%, Hide, PhpPid
+        Run, %A_ScriptDir%\%PhpRunCmd%, %WorkDir%, Hide, PhpPid
 
         Sleep, 100
         Process, Exist, %PhpPid%

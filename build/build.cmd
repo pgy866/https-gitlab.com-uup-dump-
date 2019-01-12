@@ -22,9 +22,10 @@ bin\AutoHotkeyU32.exe src\touchdir.ahk temp
 if NOT EXIST "bin\ResourceHacker.exe" exit /b 1
 if NOT EXIST "bin\7zSD.sfx" exit /b 1
 
+move temp\files\AutoHotkey.exe temp\files\src\files
 copy ..\res\sfxbootstrap.ahk temp\files\src
 bin\AutoHotkeyU32.exe src\touchdir.ahk temp
-..\files\7za.exe -mx9 a temp.7z .\temp\files\*
+..\files\7za.exe -mx9 a temp.7z .\temp\files\src\*
 
 rmdir /q /s temp
 mkdir temp

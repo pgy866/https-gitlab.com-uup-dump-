@@ -3,13 +3,11 @@ cd /d "%~dp0"
 SETLOCAL ENABLEDELAYEDEXPANSION
 title UUP dump downloader
 
-set "aria2=files\aria2\aria2c.exe"
-set "a7z=files\7za.exe"
+set "aria2=files\aria2c.exe"
 set "aria2Script=files\aria2_script.txt"
 set "destDir=UUPs"
 
 if NOT EXIST %aria2% goto :NO_ARIA2_ERROR
-if NOT EXIST %a7z% goto :NO_FILE_ERROR
 if NOT EXIST %aria2Script% goto :NO_FILE_ERROR
 
 set "speedLimit=0"

@@ -92,82 +92,16 @@ Languages["zh-cn"] := "Chinese (Simplified)"
 Languages["zh-tw"] := "Chinese (Traditional)"
 
 RegRead, Locale, HKEY_CURRENT_USER\Control Panel\International, LocaleName
-
-ExtractTranslation(Locale) {
-    If(Locale == "pl-PL")
-    {
-        FileInstall, files\lang\pl-PL.ini, %A_Temp%\UUPDUMP_translation.ini
-        return
-    }
-    Else If(Locale == "nl-NL")
-    {
-        FileInstall, files\lang\nl-NL.ini, %A_Temp%\UUPDUMP_translation.ini
-        return
-    }
-    Else If(Locale == "de-DE")
-    {
-        FileInstall, files\lang\de-DE.ini, %A_Temp%\UUPDUMP_translation.ini
-        return
-    }
-    Else If(Locale == "ar-SA")
-    {
-        FileInstall, files\lang\ar-SA.ini, %A_Temp%\UUPDUMP_translation.ini
-        return
-    }
-    Else If(Locale == "fr-FR")
-    {
-        FileInstall, files\lang\fr-FR.ini, %A_Temp%\UUPDUMP_translation.ini
-        return
-    }
-    Else If(Locale == "ko-KR")
-    {
-        FileInstall, files\lang\ko-KR.ini, %A_Temp%\UUPDUMP_translation.ini
-        return
-    }
-    Else If(Locale == "pt-PT")
-    {
-        FileInstall, files\lang\pt-PT.ini, %A_Temp%\UUPDUMP_translation.ini
-        return
-    }
-    Else If(Locale == "pt-BR")
-    {
-        FileInstall, files\lang\pt-BR.ini, %A_Temp%\UUPDUMP_translation.ini
-        return
-    }
-    Else If(Locale == "sv-SE")
-    {
-        FileInstall, files\lang\sv-SE.ini, %A_Temp%\UUPDUMP_translation.ini
-        return
-    }
-    Else If(Locale == "es-ES")
-    {
-        FileInstall, files\lang\es-ES.ini, %A_Temp%\UUPDUMP_translation.ini
-        return
-    }
-    Else If(Locale == "it-IT")
-    {
-        FileInstall, files\lang\it-IT.ini, %A_Temp%\UUPDUMP_translation.ini
-        return
-    }
-    Else If(Locale == "hu-HU")
-    {
-        FileInstall, files\lang\hu-HU.ini, %A_Temp%\UUPDUMP_translation.ini
-        return
-    }
-
-    return
-}
-
-ExtractTranslation(Locale)
+LanguageFile = %A_ScriptDir%\files\lang\%Locale%.ini
 
 If(FileExist(ScriptDir "\UUPDUMP_translation.ini"))
-    FileCopy, %ScriptDir%\UUPDUMP_translation.ini, %A_Temp%\UUPDUMP_translation.ini, 1
+    LanguageFile = %ScriptDir%\UUPDUMP_translation.ini
 
-If(FileExist(A_Temp "\UUPDUMP_translation.ini"))
+If(FileExist(LanguageFile))
 {
     For Key, Value in Translation
     {
-        IniRead, text_%Key%, %A_Temp%\UUPDUMP_translation.ini, Translations, %Key%, MissingTranslation
+        IniRead, text_%Key%, %LanguageFile%, Translations, %Key%, MissingTranslation
         If(text_%Key% == "MissingTranslation")
         {
             text_%Key% := Value
@@ -178,20 +112,18 @@ If(FileExist(A_Temp "\UUPDUMP_translation.ini"))
     }
     For Key in Languages
     {
-        IniRead, Name, %A_Temp%\UUPDUMP_translation.ini, Languages, %Key%, MissingTranslation
+        IniRead, Name, %LanguageFile%, Languages, %Key%, MissingTranslation
         If(Name != "MissingTranslation")
         {
             Languages[Key] := Name
         }
     }
     Name := ""
-    IniRead, DefaultLanguage, %A_Temp%\UUPDUMP_translation.ini, Config, Language, MissingTranslation
+    IniRead, DefaultLanguage, %LanguageFile%, Config, Language, MissingTranslation
     If(Name == "MissingTranslation")
     {
         DefaultLanguage = en-US
     }
-
-    FileDelete, %A_Temp%\UUPDUMP_translation.ini
 } else {
     For Key, Value in Translation
     {
