@@ -78,14 +78,16 @@ If(!FileExist(DefaultDir))
 SplitPath, DefaultDir,,,,, DefaultDrive
 WorkDir := CreateWorkDir(DefaultDrive)
 
+Color := GetCurrentSystemColor()
+
 ;Header
 Gui Add, Text, x0 y0 w512 h54 +0x6
-Gui Font, s9 w800, Segoe UI
-Gui Add, Text, x16 y8 w480 h23 BackgroundTrans, %AppName%
-Gui Font, w400
-Gui Add, Text, x16 y31 w480 h23 BackgroundTrans vAppInfo, %text_PrepareToWork%
+Gui Font, s11 q5 c%Color%, Segoe UI
+Gui Add, Text, x16 y7 w480 r1 BackgroundTrans vAppNameText, %AppName%
+Gui Font, s9 q5 cDefault
+Gui Add, Text, x16 y31 w480 r1 BackgroundTrans vAppInfo, %text_PrepareToWork%
 Gui Font
-Gui Font, s9, Segoe UI
+Gui Font, s9 q5, Segoe UI
 
 ;Build search controls
 Gui Add, Edit, x24 y85 w376 vBuildSearchQuery
@@ -112,12 +114,15 @@ Gui Add, Custom, x16 y324 w480 h64 ClassButton +0x200E gStartProcess vStartProce
 
 Gosub ChangeToBuildSearchControls
 
+Gui, +HwndGuiHWND
 Gui, +Disabled
 Gosub, PrepareEnv
 Gui, -Disabled
 GuiControl, , AppInfo, %text_PoweredBy% UUP dump API v%APIVersion%
 GuiControl, Focus, BuildSearchQuery
 Gui Show, w512 h404, %AppName%
+
+OnMessage(0x6, "WindowActivateEvent")
 Return
 
 HideAllControls:

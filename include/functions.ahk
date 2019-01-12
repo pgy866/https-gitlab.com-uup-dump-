@@ -141,8 +141,11 @@ PopulateBuildList(Response, Search = "") {
         Return
     }
 
+    GuiControl, -Redraw, BuildSelect
     GuiControl, , BuildSelect, |
     GuiControl, , BuildSelect, %BuildList%
+    GuiControl, +Redraw, BuildSelect
+
     BuildNames := BuildNamesTemp
 
     Return BuildIDs
@@ -327,6 +330,35 @@ MoveFileToLocation(Dest, File) {
     }
 
     FileMove, %File%, %NewFile%
+}
+
+GetCurrentSystemColor() {
+    If(InStr(A_OSVersion, "10.0")) {
+        RegRead, Color, HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Accent, AccentPalette
+        return SubStr(Color, 25, 6)
+    } else {
+        return "1f59c3"
+    }
+}
+
+WindowActivateEvent(wParam, lParam, msg, hwnd) {
+    Global AppName, GuiHWND
+    If(hwnd != GuiHWND)
+        return
+
+    If(wParam > 0)
+    {
+        Color := GetCurrentSystemColor()
+    } else {
+        Color := 888888
+    }
+
+    Gui Font, s11 q5 c%Color%
+    GuiControl, -Redraw, AppNameText
+    GuiControl, Font, AppNameText
+    GuiControl,, AppNameText, %AppName%
+    GuiControl, +Redraw, AppNameText
+    Gui Font, s9 q5
 }
 
 TaskDialog(Instruction, Content := "", Title := "", Buttons := 1, IconID := 0, IconRes := "", Owner := 0x10010) {
