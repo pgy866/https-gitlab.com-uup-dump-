@@ -341,17 +341,11 @@ GetCurrentSystemColor() {
     }
 }
 
-WindowActivateEvent(wParam, lParam, msg, hwnd) {
-    Global AppName, GuiHWND
-    If(hwnd != GuiHWND)
-        return
+DWMColorChangedEvent() {
+    Global AppName
 
-    If(wParam > 0)
-    {
-        Color := GetCurrentSystemColor()
-    } else {
-        Color := 888888
-    }
+    Sleep, 33
+    Color := GetCurrentSystemColor()
 
     Gui Font, s11 q5 c%Color%
     GuiControl, -Redraw, AppNameText

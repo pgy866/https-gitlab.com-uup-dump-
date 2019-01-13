@@ -90,22 +90,26 @@ Gui Font
 Gui Font, s9 q5, Segoe UI
 
 ;Build search controls
+Gui Font, s10 q5
+Gui Add, GroupBox, x16 y60 w480 h254 vGuiSearchGroupBox, %text_SearchBuilds%
+Gui Font, s9 q5
 Gui Add, Edit, x24 y85 w376 vBuildSearchQuery
 Gui Add, Button, x408 y84 w80 h25 gSearchBuilds vGuiSearchButton +Default, %text_Search%
-Gui Add, GroupBox, x16 y60 w480 h254 vGuiSearchGroupBox, %text_SearchBuilds%
 Gui Add, ListBox, x24 y120 w464 h184 +0x100 +AltSubmit +Disabled vBuildSelect
 Gui Add, Custom, x16 y324 w480 h64 gBuildSelectOK vBuildSelectBtn ClassButton +0x200E +Disabled, %text_BuildSelectAction%`n%text_BuildSelectActionSub%
 
 ;Language, edition, destination location controls
-Gui Add, Edit, x24 y85 w376 +ReadOnly vSelectedBuildText
-Gui Add, Button, x408 y84 w80 h25 gChangeToBuildSearchControls vChangeBuildButton, %text_Change%
-Gui Add, Text, x24 y152 w224 h23 vGuiLanguageLabel, %text_Language%
-Gui Add, DropDownList, x24 y175 w224 +AltSubmit +Disabled vLangSelect gLangSelected
-Gui Add, Text, x264 y152 w224 h23 vGuiEditionLabel, %text_Edition%
-Gui Add, DropDownList, x264 y175 w224 +AltSubmit +Disabled vEditionSelect gEditionSelected
+Gui Font, s10 q5
 Gui Add, GroupBox, x16 y60 w480 h60 vGuiBuildSelectionGroupBox, %text_SelectedBuild%
 Gui Add, GroupBox, x16 y132 w480 h80 vGuiLanguageEditionGroupBox, %text_LanguageAndEdition%
 Gui Add, GroupBox, x16 y226 w480 h88 vGuiSaveOptionsGroupBox, %text_SaveOptions%
+Gui Font, s9 q5
+Gui Add, Edit, x24 y85 w376 +ReadOnly vSelectedBuildText
+Gui Add, Button, x408 y84 w80 h25 gChangeToBuildSearchControls vChangeBuildButton, %text_Change%
+Gui Add, Text, x24 y154 w224 r1 vGuiLanguageLabel, %text_Language%
+Gui Add, DropDownList, x24 y175 w224 +AltSubmit +Disabled vLangSelect gLangSelected
+Gui Add, Text, x264 y154 w224 r1 vGuiEditionLabel, %text_Edition%
+Gui Add, DropDownList, x264 y175 w224 +AltSubmit +Disabled vEditionSelect gEditionSelected
 Gui Add, Edit, x24 y251 w376 h22 vDestinationLocation, %DefaultDir%
 Gui Add, Button, x408 y250 w80 h24 gFindFolder vGuiBrowseButton, %text_Browse%
 Gui Add, Checkbox, x24 y278 w224 h32 vProcessSaveUUP gChangeStateOfSkipConversionButton, %text_SaveUUPFiles%
@@ -114,15 +118,17 @@ Gui Add, Custom, x16 y324 w480 h64 ClassButton +0x200E gStartProcess vStartProce
 
 Gosub ChangeToBuildSearchControls
 
-Gui, +HwndGuiHWND
+If(InStr(A_OSVersion, "10.0")) {
+    OnMessage(0x320, "DWMColorChangedEvent")
+}
+
 Gui, +Disabled
 Gosub, PrepareEnv
 Gui, -Disabled
+
 GuiControl, , AppInfo, %text_PoweredBy% UUP dump API v%APIVersion%
 GuiControl, Focus, BuildSearchQuery
 Gui Show, w512 h404, %AppName%
-
-OnMessage(0x6, "WindowActivateEvent")
 Return
 
 HideAllControls:
