@@ -116,11 +116,14 @@ Gui Add, Checkbox, x24 y278 w224 h32 vProcessSaveUUP gChangeStateOfSkipConversio
 Gui Add, Checkbox, x264 y278 w224 h32 vProcessSkipConversion +Disabled, %text_SkipConversion%
 Gui Add, Custom, x16 y324 w480 h64 ClassButton +0x200E gStartProcess vStartProcessBtn +Disabled, %text_StartProcess%`n%text_StartProcessSub%
 
-Gosub ChangeToBuildSearchControls
+;Update information text
+Gui Add, Link, x24 y404 w480 r1 vUpdateText +Hidden -TabStop, place update info here
 
 If(InStr(A_OSVersion, "10.0")) {
     OnMessage(0x320, "DWMColorChangedEvent")
 }
+
+Gosub ChangeToBuildSearchControls
 
 Gui, +Disabled
 Gosub, PrepareEnv
@@ -128,7 +131,15 @@ Gui, -Disabled
 
 GuiControl, , AppInfo, %text_PoweredBy% UUP dump API v%APIVersion%
 GuiControl, Focus, BuildSearchQuery
-Gui Show, w512 h404, %AppName%
+
+If(UpdateAvailable) {
+    Gui Add, Text, x0 y398 w515 h1 +0x10
+    Gui Add, Picture, x4 y404 w16 h16 Icon5, user32.dll
+    GuiControl, Show, UpdateText
+    Gui Show, w512 h424, %AppName%
+} else {
+    Gui Show, w512 h404, %AppName%
+}
 Return
 
 HideAllControls:
@@ -232,7 +243,7 @@ PrepareEnv:
     BuildIDs := PopulateBuildList(BuildListResponse)
     SplashImage, , , 90`%
 
-    CheckVersion(Version, VersionCheckUrl)
+    UpdateAvailable := CheckVersion(Version, VersionCheckUrl)
 
     PhpWasRunning := 1
     SetTimer, MonitorPhp, 100

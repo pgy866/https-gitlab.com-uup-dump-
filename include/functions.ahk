@@ -1,12 +1,17 @@
 ﻿CheckVersion(Version, VersionCheckUrl) {
-    Global AppName, text_OldVersion, text_LatestVersion, text_YourVersion
+    Global AppName, text_UpdateAvailable, AppNameOnly
 
     LatestVersion := UrlGet(VersionCheckUrl, "GET")
     Temp := StrSplit(LatestVersion, "`n")
     LatestVersion := StrReplace(Temp[1], "`r")
 
     if(Version != LatestVersion)
-        MsgBox, 64, %AppName%, %text_OldVersion%`n`n%text_YourVersion%: %Version%`n%text_LatestVersion%: %LatestVersion%
+    {
+        GuiControl,, UpdateText, %text_UpdateAvailable% <a href="https://gitlab.com/uup-dump/downloader/tags/%LatestVersion%">%AppNameOnly% v%LatestVersion%</a>
+        return 1
+    }
+
+    return 0
 }
 
 CreateWorkDir(Loc) {
