@@ -14,7 +14,8 @@ xcopy /cherkyq ..\include temp\files\src\include\
 copy ..\uupdownloader.ahk temp\files\src
 copy bin\AutoHotkeyU32.exe temp\files\AutoHotkey.exe
 copy src\run.cmd temp\uupdownloader.cmd
-bin\AutoHotkeyU32.exe src\touchdir.ahk temp
+bin\AutoHotkeyU32.exe /ErrorStdOut src\touchdir.ahk temp
+if %errorlevel% NEQ 0 exit /b %errorlevel%
 
 ..\files\7za.exe -mx9 a ..\uupdownloader.7z .\temp\*
 
@@ -24,7 +25,9 @@ if NOT EXIST "bin\7zSD.sfx" exit /b 1
 
 move temp\files\AutoHotkey.exe temp\files\src\files
 copy ..\res\sfxbootstrap.ahk temp\files\src
-bin\AutoHotkeyU32.exe src\touchdir.ahk temp
+bin\AutoHotkeyU32.exe /ErrorStdOut src\touchdir.ahk temp
+if %errorlevel% NEQ 0 exit /b %errorlevel%
+
 ..\files\7za.exe -mx9 a temp.7z .\temp\files\src\*
 
 rmdir /q /s temp
@@ -34,7 +37,8 @@ del temp.7z
 
 xcopy /cherkyq ..\res temp\
 copy ..\files\icon.ico temp\icon.ico
-bin\AutoHotkeyU32.exe src\genversiontable.ahk temp\resources.rc temp\filenames.cmd
+bin\AutoHotkeyU32.exe /ErrorStdOut src\genversiontable.ahk temp\resources.rc temp\filenames.cmd
+if %errorlevel% NEQ 0 exit /b %errorlevel%
 
 cd temp
 ..\bin\ResourceHacker.exe -open resources.rc -save resources.res -action compile
