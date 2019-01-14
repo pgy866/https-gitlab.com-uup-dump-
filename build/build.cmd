@@ -48,3 +48,7 @@ ren ..\uupdownloader.7z "%fileNames%.7z"
 
 ::Cleanup
 rmdir /q /s temp
+
+::Error if one of files does not exist
+if NOT EXIST "..\%fileNames%.exe" exit /b 1
+if NOT EXIST "..\%fileNames%.7z" exit /b 1

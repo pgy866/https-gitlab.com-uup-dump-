@@ -5,8 +5,7 @@ SetWorkingDir, %WorkDir%
 Dir = %1%
 If(!InStr(FileExist(Dir), "D"))
 {
-    MsgBox not dir
-    ExitApp
+    ExitApp, 1
 }
 
 TimeStamp := A_YYYY . A_MM . A_DD . A_Hour . A_Min . A_Sec

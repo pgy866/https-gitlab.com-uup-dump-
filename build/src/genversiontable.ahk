@@ -6,15 +6,13 @@ SetWorkingDir, %WorkDir%
 File1 = %1%
 If File1 =
 {
-    msgbox file1 not specified
-    ExitApp
+    ExitApp, 1
 }
 
 File2 = %2%
 If File2 =
 {
-    msgbox file2 not specified
-    ExitApp
+    ExitApp, 1
 }
 
 FileAppend,

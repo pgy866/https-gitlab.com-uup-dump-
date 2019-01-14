@@ -1,0 +1,21 @@
+version: 1.2.0-alpha+ci.{build}
+skip_tags: true
+image: Visual Studio 2015
+
+install:
+- cinst reshack
+- cinst autohotkey
+- curl -olzmasdk.7z "https://www.7-zip.org/a/lzma1806.7z"
+- 7z e lzmasdk.7z bin\7zSD.sfx
+- mkdir build\bin
+- move 7zSD.sfx build\bin
+- copy "C:\Program Files\AutoHotkey\AutoHotkeyU32.exe" build\bin
+- copy "C:\Program Files (x86)\Resource Hacker\ResourceHacker.exe" build\bin
+- ps: (Get-Content "include\appinfo.ahk") -replace '^(Version +=).*$', "`$1 $env:APPVEYOR_BUILD_VERSION" | Set-Content "include\appinfo.ahk"
+
+build_script:
+- build\build.cmd
+
+artifacts:
+- path: uupdownloader*.exe
+- path: uupdownloader*.7z
