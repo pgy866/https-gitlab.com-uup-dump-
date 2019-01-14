@@ -8,8 +8,9 @@ require_once 'api/get.php';
 require_once 'shared/main.php';
 
 logToFile('Attempting to get list of files for '.$updateId.' '.$usePack.' '.$desiredEdition.'...');
-$files = uupGetFiles($updateId, $usePack, $desiredEdition);
+$files = uupGetFiles($updateId, $usePack, $desiredEdition, 1);
 if(isset($files['error'])) {
+    logToFile('API returned an error: '.$files['error']);
     throwError($files['error']);
 }
 

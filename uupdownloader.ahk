@@ -359,8 +359,26 @@ StartProcess:
     Gui ProgressOfGet: Show, w316 h52, %text_PleaseWait%
     SetTimer, UpdateProgressOfGetProgress, 33
 
-    AriaScript := UrlGet("http://127.0.0.1:" PhpPort "/get.php?id=" SelectedBuild "&pack=" SelectedLang "&edition=" SelectedEdition, "GET")
+    If ProcessSkipConversion != 1
+        UpdatesList := UrlGet("http://127.0.0.1:" PhpPort "/get.php?id=" SelectedBuild "&pack=" SelectedLang "&edition=updateOnly&simple=1", "GET")
 
+    If(UpdatesList != "ERROR" && ProcessSkipConversion != 1)
+    {
+        UpdatesList := RegExReplace(UpdatesList, "`n", "`r`n")
+        UpdatesList := RegExReplace(UpdatesList, "\|.*")
+        UpdatesList := RegExReplace(UpdatesList, "(.+)`r`n", " - $1`r`n")
+
+        MsgBox, 36, %AppName%, %text_UpdatesIncludedInfo1%:`n%UpdatesList%`n%text_UpdatesIncludedInfo2%
+        IfMsgBox No
+        {
+            Gui ProgressOfGet: Destroy
+            Gui, -Disabled
+            Gui, Show
+            Return
+        }
+    }
+
+    AriaScript := UrlGet("http://127.0.0.1:" PhpPort "/get.php?id=" SelectedBuild "&pack=" SelectedLang "&edition=" SelectedEdition, "GET")
     if(AriaScript == "ERROR")
     {
         Gui ProgressOfGet: Destroy

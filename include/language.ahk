@@ -51,6 +51,8 @@ Translation["LatestVersion"] := "Latest version"
 Translation["PhpFailedRestart"] := "Failed to restart PHP backend. The application will close."
 Translation["PhpFailedClose"] := "An error occurred during attempt to close PHP backend. Please check if php.exe process is running and terminate it manually.`n`nClick OK after terminating PHP."
 Translation["UpdateAvailable"] := "An update is available!"
+Translation["UpdatesIncludedInfo1"] := "The following updates are included in the selected UUP set"
+Translation["UpdatesIncludedInfo2"] := "If you continue, these updates will be automatically integrated during the UUP to ISO conversion process. This may take a lot more time than normal conversion process.`n`nDo you wish to continue?"
 
 Languages := []
 Languages["ar-sa"] := "Arabic (Saudi Arabia)"
