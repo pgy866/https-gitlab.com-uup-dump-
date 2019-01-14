@@ -24,6 +24,10 @@ of AutoHotkey with all needed files to run UUP dump downloader.
 Downloads of this application can be found in GitLab tags section.
 https://gitlab.com/uup-dump/downloader/tags
 
+### Unstable / testing versions
+Untested versions that are currently in development can be downloaded from
+https://ci.appveyor.com/project/whatever127/downloader/build/artifacts
+
 ### Building executable file
 To build this project into single executable you need the following in
 `build\bin` directory:
