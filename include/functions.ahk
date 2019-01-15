@@ -7,7 +7,7 @@
 
     if(Version != LatestVersion)
     {
-        GuiControl,, UpdateText, %text_UpdateAvailable% <a href="https://gitlab.com/uup-dump/downloader/tags/%LatestVersion%">%AppNameOnly% v%LatestVersion%</a>
+        GuiControl,, BottomInformationText, %text_UpdateAvailable% <a href="https://gitlab.com/uup-dump/downloader/tags/%LatestVersion%">%AppNameOnly% v%LatestVersion%</a>
         return 1
     }
 
@@ -96,7 +96,8 @@ CheckWorkDirLocation(DestinationLocation) {
 }
 
 PopulateBuildList(Response, Search = "") {
-    Global BuildNames, text_Error, text_CannotGetBuilds, text_NoSearchResults
+    Global text_Error, text_CannotGetBuilds, text_NoSearchResults
+    Global BuildNames, BuildNumbers, BuildArchs
 
     Response := RegExReplace(Response, "i)Cumulative Update for ", "Update to ")
     Response := RegExReplace(Response, "i)Version Next", "Insider Preview")
@@ -107,6 +108,8 @@ PopulateBuildList(Response, Search = "") {
     BuildList =
     BuildIDs := []
     BuildNamesTemp := []
+    BuildArchsTemp := []
+    BuildNumbersTemp := []
 
     Index = 0
     Loop, Parse, Response, `n
@@ -126,6 +129,8 @@ PopulateBuildList(Response, Search = "") {
 
             BuildIDs[Index] := ID
             BuildNamesTemp[Index] := Name " " Arch
+            BuildArchsTemp[Index] := Arch
+            BuildNumbersTemp[Index] := Build
             BuildList .= Name " " Arch "|"
             if(Index = 1)
             {
@@ -152,6 +157,8 @@ PopulateBuildList(Response, Search = "") {
     GuiControl, +Redraw, BuildSelect
 
     BuildNames := BuildNamesTemp
+    BuildArchs := BuildArchsTemp
+    BuildNumbers := BuildNumbersTemp
 
     Return BuildIDs
 }
@@ -320,6 +327,29 @@ GetFileInfoForUpdate(Update) {
 
     Gui, -Disabled
     Progress, off
+}
+
+GetFilesSize(SelectedBuild, SelectedLang, SelectedEdition) {
+    Global PhpPort
+    Output := UrlGet("http://127.0.0.1:" PhpPort "/getlist.php?id=" SelectedBuild "&pack=" SelectedLang "&edition=" SelectedEdition, "GET")
+
+    FullSize := 0
+    Loop, Parse, Output, `n
+    {
+        RegExMatch(A_LoopField, "SO)(.*)\|(.*)\|(.*)", Match)
+        Size := Format("{:f}", Match.3)
+        FullSize := FullSize + Size
+    }
+
+    Suffixes := ["K", "M", "G", "T", "P", "E", "Z", "Y"]
+    Index := 0
+    While(FullSize >= 1024 && Index < 8)
+    {
+        FullSize := FullSize / 1024
+        Index += 1
+    }
+
+    Return Format("{:.2f}", FullSize) Suffixes[Index] "B"
 }
 
 MoveFileToLocation(Dest, File) {

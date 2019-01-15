@@ -116,8 +116,10 @@ Gui Add, Checkbox, x24 y278 w224 h32 vProcessSaveUUP gChangeStateOfSkipConversio
 Gui Add, Checkbox, x264 y278 w224 h32 vProcessSkipConversion +Disabled, %text_SkipConversion%
 Gui Add, Custom, x16 y324 w480 h64 ClassButton +0x200E gStartProcess vStartProcessBtn +Disabled, %text_StartProcess%`n%text_StartProcessSub%
 
-;Update information text
-Gui Add, Link, x24 y404 w480 r1 vUpdateText +Hidden -TabStop, place update info here
+;Information text
+Gui Add, Text, x0 y398 w515 h1 +0x10
+Gui Add, Picture, x4 y404 w16 h16 Icon5, user32.dll
+Gui Add, Link, x24 y404 w480 r1 vBottomInformationText gBottomInformationAction, %text_PleaseSelectBuild%
 
 If(InStr(A_OSVersion, "10.0")) {
     OnMessage(0x320, "DWMColorChangedEvent")
@@ -131,15 +133,7 @@ Gui, -Disabled
 
 GuiControl, , AppInfo, %text_PoweredBy% UUP dump API v%APIVersion%
 GuiControl, Focus, BuildSearchQuery
-
-If(UpdateAvailable) {
-    Gui Add, Text, x0 y398 w515 h1 +0x10
-    Gui Add, Picture, x4 y404 w16 h16 Icon5, user32.dll
-    GuiControl, Show, UpdateText
-    Gui Show, w512 h424, %AppName%
-} else {
-    Gui Show, w512 h404, %AppName%
-}
+Gui Show, w512 h424, %AppName%
 Return
 
 HideAllControls:
@@ -206,6 +200,7 @@ ChangeToBuildSearchControls:
     GuiControl, Enable, GuiSearchButton
     GuiControl, Enable, BuildSelect
     GuiControl, Enable, BuildSelectBtn
+    GuiControl,, BottomInformationText, %text_PleaseSelectBuild%
 Return
 
 PrepareEnv:
@@ -273,6 +268,7 @@ BuildSelectOK:
 
     Gui Submit, NoHide
     Gosub ChangeToConfigControls
+    GuiControl,, BottomInformationText, %text_PleaseWait%
 
     GuiControl, Disable, ChangeBuildButton
     GuiControl, Disable, LangSelect
@@ -280,6 +276,8 @@ BuildSelectOK:
     GuiControl, Disable, StartProcessBtn
 
     BuildName := BuildNames[BuildSelect]
+    BuildArch := BuildArchs[BuildSelect]
+    BuildNumber := BuildNumbers[BuildSelect]
     GuiControl, , SelectedBuildText, %BuildName%
 
     SelectedBuild := BuildIDs[BuildSelect]
@@ -315,6 +313,20 @@ EditionSelected:
     GuiControl, Disable, ChangeBuildButton
     GuiControl, Disable, StartProcessBtn
     SelectedEdition := EditionCodes[EditionSelect]
+
+    FilesSize := GetFilesSize(SelectedBuild, SelectedLang, SelectedEdition)
+
+    UpdatesList := UrlGet("http://127.0.0.1:" PhpPort "/getlist.php?id=" SelectedBuild "&pack=" SelectedLang "&edition=updateOnly", "GET")
+    If(UpdatesList != "ERROR")
+    {
+        UpdatesList := RegExReplace(UpdatesList, "`n", "`r`n")
+        UpdatesList := RegExReplace(UpdatesList, "\|.*")
+        UpdatesList := RegExReplace(UpdatesList, "(.+)`r`n", " - $1`r`n")
+
+        GuiControl,, BottomInformationText, %text_DownloadSize%: %FilesSize% <a id="ShowIncludedUpdatesList">%text_ContainsAdditionalUpdates%</a>
+    } else {
+        GuiControl,, BottomInformationText, %text_DownloadSize%: %FilesSize%
+    }
 
     GuiControl, Enable, ChangeBuildButton
     GuiControl, Enable, LangSelect
@@ -359,25 +371,6 @@ StartProcess:
     Gui ProgressOfGet: Show, w316 h52, %text_PleaseWait%
     SetTimer, UpdateProgressOfGetProgress, 33
 
-    If ProcessSkipConversion != 1
-        UpdatesList := UrlGet("http://127.0.0.1:" PhpPort "/get.php?id=" SelectedBuild "&pack=" SelectedLang "&edition=updateOnly&simple=1", "GET")
-
-    If(UpdatesList != "ERROR" && ProcessSkipConversion != 1)
-    {
-        UpdatesList := RegExReplace(UpdatesList, "`n", "`r`n")
-        UpdatesList := RegExReplace(UpdatesList, "\|.*")
-        UpdatesList := RegExReplace(UpdatesList, "(.+)`r`n", " - $1`r`n")
-
-        MsgBox, 36, %AppName%, %text_UpdatesIncludedInfo1%:`n%UpdatesList%`n%text_UpdatesIncludedInfo2%
-        IfMsgBox No
-        {
-            Gui ProgressOfGet: Destroy
-            Gui, -Disabled
-            Gui, Show
-            Return
-        }
-    }
-
     AriaScript := UrlGet("http://127.0.0.1:" PhpPort "/get.php?id=" SelectedBuild "&pack=" SelectedLang "&edition=" SelectedEdition, "GET")
     if(AriaScript == "ERROR")
     {
@@ -420,19 +413,28 @@ StartProcess:
 
     if ProcessSaveUUP = 1
     {
-        FileDelete, %WorkDir%\UUPs\.README
+        BuildHash := SubStr(SelectedBuild, 1, 8)
 
-        NewUupDir = %DestinationLocation%\UUPs
+        SelEditFolder := SelectedEdition
+        If(SelEditFolder == 0)
+        {
+            SelEditFolder = all
+        }
+
+        FolderName = %BuildNumber%_%BuildArch%_%SelectedLang%_%SelEditFolder%_%BuildHash%
+        NewUupDir = %DestinationLocation%\UUPs\%FolderName%
+
         Index := 0
         while(FileExist(NewUupDir))
         {
             Index++
-            NewUupDir = %DestinationLocation%\UUPs_%Index%
+            NewUupDir = %DestinationLocation%\UUPs\%FolderName%_%Index%
         }
 
         IfNotExist, %NewUupDir%
             FileCreateDir, %NewUupDir%
 
+        FileDelete, %WorkDir%\UUPs\.README
         Loop, Files, %WorkDir%\UUPs\*.*, F
             MoveFileToLocation(NewUupDir, A_LoopFileFullPath)
     }
@@ -498,6 +500,13 @@ ProgressOfGetGuiClose:
 
 UpdateProgressOfGetProgress:
     GuiControl ProgressOfGet:, ProgressOfGetProgress, 0
+Return
+
+BottomInformationAction:
+    If(ErrorLevel == "ShowIncludedUpdatesList")
+    {
+        MsgBox, 64, %AppName%, %text_UpdatesIncludedInfo1%:`n%UpdatesList%`n%text_UpdatesIncludedInfo2%
+    }
 Return
 
 #If WinActive("ahk_pid " CurrentPid)
