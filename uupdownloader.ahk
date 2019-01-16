@@ -1,7 +1,22 @@
 ﻿#Include %A_ScriptDir%\include\header.ahk
 #Include %A_ScriptDir%\include\appinfo.ahk
 
-VersionCheckUrl = https://gitlab.com/uup-dump/downloader/snippets/1792655/raw
+If(ReleaseType == 0)
+{
+    VersionCheckSnippet = 1792654
+}
+else If(ReleaseType == 1)
+{
+
+    VersionCheckSnippet = 1792655
+}
+else
+{
+
+    VersionCheckSnippet = 1798502
+}
+
+VersionCheckUrl = https://gitlab.com/uup-dump/downloader/snippets/%VersionCheckSnippet%/raw
 
 If(A_IsCompiled)
 {
@@ -298,9 +313,11 @@ LangSelected:
     GuiControl, Disable, ChangeBuildButton
     GuiControl, Disable, EditionSelect
     GuiControl, Disable, StartProcessBtn
-    SelectedLang := LangCodes[LangSelect]
+    GuiControl,, BottomInformationText, %text_PleaseWait%
 
+    SelectedLang := LangCodes[LangSelect]
     EditionCodes := PopulateEditionList(SelectedBuild, SelectedLang)
+
     GuiControl, Enable, ChangeBuildButton
     GuiControl, Enable, LangSelect
 
@@ -312,8 +329,9 @@ EditionSelected:
     Gui Submit, NoHide
     GuiControl, Disable, ChangeBuildButton
     GuiControl, Disable, StartProcessBtn
-    SelectedEdition := EditionCodes[EditionSelect]
+    GuiControl,, BottomInformationText, %text_PleaseWait%
 
+    SelectedEdition := EditionCodes[EditionSelect]
     FilesSize := GetFilesSize(SelectedBuild, SelectedLang, SelectedEdition)
 
     UpdatesList := UrlGet("http://127.0.0.1:" PhpPort "/getlist.php?id=" SelectedBuild "&pack=" SelectedLang "&edition=updateOnly", "GET")
@@ -505,7 +523,7 @@ Return
 BottomInformationAction:
     If(ErrorLevel == "ShowIncludedUpdatesList")
     {
-        MsgBox, 64, %AppName%, %text_UpdatesIncludedInfo1%:`n%UpdatesList%`n%text_UpdatesIncludedInfo2%
+        MsgBox, 48, %AppName%, %text_UpdatesIncludedInfo1%:`n%UpdatesList%`n%text_UpdatesIncludedInfo2%
     }
 Return
 

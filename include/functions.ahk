@@ -5,7 +5,13 @@
     Temp := StrSplit(LatestVersion, "`n")
     LatestVersion := StrReplace(Temp[1], "`r")
 
-    if(Version != LatestVersion)
+    Version := StrSplit(Version, "+")
+    Version := Version.1
+
+    LatestVersionNoMeta := StrSplit(LatestVersion, "+")
+    LatestVersionNoMeta := LatestVersionNoMeta.1
+
+    if(Version != LatestVersionNoMeta)
     {
         GuiControl,, BottomInformationText, %text_UpdateAvailable% <a href="https://gitlab.com/uup-dump/downloader/tags/%LatestVersion%">%AppNameOnly% v%LatestVersion%</a>
         return 1

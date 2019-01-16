@@ -12,6 +12,7 @@ install:
 - copy "C:\Program Files\AutoHotkey\AutoHotkeyU32.exe" build\bin
 - copy "C:\Program Files (x86)\Resource Hacker\ResourceHacker.exe" build\bin
 - ps: (Get-Content "include\appinfo.ahk") -replace '^(Version +=).*$', "`$1 $env:APPVEYOR_BUILD_VERSION" | Set-Content "include\appinfo.ahk"
+- ps: (Get-Content "include\appinfo.ahk") -replace '^(VersionExe += .*),0$', "`$1,$env:APPVEYOR_BUILD_NUMBER" | Set-Content "include\appinfo.ahk"
 
 build_script:
 - build\build.cmd
