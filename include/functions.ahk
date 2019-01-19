@@ -226,6 +226,7 @@ PopulateLangList(SelectedBuild) {
 
     if(LangList = "")
     {
+        GuiControl,, BottomInformationText, %text_NoLanguages%
         MsgBox, 16, %text_Error%, %text_NoLanguages%
         Return 0
     }
@@ -237,7 +238,7 @@ PopulateLangList(SelectedBuild) {
 }
 
 PopulateEditionList(SelectedBuild, Lang) {
-    Global LangCodes, LangSelect, PhpPort, text_Error, text_NoEditions, text_AllEditions
+    Global LangCodes, LangSelect, PhpPort, text_Error, text_NoEditions, text_AllEditions, text_AllEditionsPlus
 
     Output := UrlGet("http://127.0.0.1:" PhpPort "/listeditions.php?id=" SelectedBuild "&pack=" Lang, "GET")
 
@@ -252,7 +253,17 @@ PopulateEditionList(SelectedBuild, Lang) {
     EditionCodes := []
     EditionCodes[1] := 0
 
-    Index := 1
+    HasADK := CheckADK()
+    If(HasADK)
+    {
+        VEditions = %text_AllEditions%||%text_AllEditionsPlus%
+        EditionCodes[2] := "AllEditionsPlus"
+        Index := 2
+    } else {
+        VEditions = %text_AllEditions%|
+        Index := 1
+    }
+
     Loop, Parse, Output, `n
     {
         RegExMatch(A_LoopField, "SO)(.*)\|(.*)", Match)
@@ -269,11 +280,12 @@ PopulateEditionList(SelectedBuild, Lang) {
 
     if EditionList =
     {
+        GuiControl,, BottomInformationText, %text_NoEditions%
         MsgBox, 16, %text_Error%, %text_NoEditions%
         Return 0
     }
 
-    EditionList = %text_AllEditions%||%EditionList%
+    EditionList = %VEditions%|%EditionList%
     GuiControl, , EditionSelect, %EditionList%
     GuiControl, Enable, EditionSelect
 
@@ -380,6 +392,22 @@ GetCurrentSystemColor() {
     } else {
         return "1f59c3"
     }
+}
+
+CheckADK() {
+    if A_OSVersion in WIN_7,WIN_8,WIN_8.1
+    {
+        RegRead, KitsRootWow, HKLM\Software\Wow6432Node\Microsoft\Windows Kits\Installed Roots, KitsRoot10
+        RegRead, KitsRoot, HKLM\Software\Microsoft\Windows Kits\Installed Roots, KitsRoot10
+
+        if (KitsRoot == "" && KitsRootWow == "")
+        {
+            return 0
+        } else {
+            return 1
+        }
+    }
+    return 1
 }
 
 DWMColorChangedEvent() {

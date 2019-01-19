@@ -56,6 +56,9 @@ Translation["UpdatesIncludedInfo2"] := "These updates will be automatically inte
 Translation["PleaseSelectBuild"] := "Please select desired build."
 Translation["DownloadSize"] := "Download size"
 Translation["ContainsAdditionalUpdates"] := "(contains additional updates)"
+Translation["AllEditionsPlus"] := "All editions+"
+Translation["LearnMoreAllEditionsPlus"] := "Learn more about All editions+"
+Translation["LearnMoreAllEditionsPlusContents"] := "All editions+ option creates all possible editions from base editons available in UUP set.`n`nThis option is only available if you are running this application on Windows 10 or have Windows 10 ADK installed."
 
 Languages := []
 Languages["ar-sa"] := "Arabic (Saudi Arabia)"

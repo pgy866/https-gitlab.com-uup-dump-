@@ -106,35 +106,36 @@ Gui Font, s9 q5, Segoe UI
 
 ;Build search controls
 Gui Font, s10 q5
-Gui Add, GroupBox, x16 y60 w480 h254 vGuiSearchGroupBox, %text_SearchBuilds%
+Gui Add, GroupBox, x16 y60 w480 h260 vGuiSearchGroupBox, %text_SearchBuilds%
 Gui Font, s9 q5
 Gui Add, Edit, x24 y85 w376 vBuildSearchQuery
 Gui Add, Button, x408 y84 w80 h25 gSearchBuilds vGuiSearchButton +Default, %text_Search%
-Gui Add, ListBox, x24 y120 w464 h184 +0x100 +AltSubmit +Disabled vBuildSelect
-Gui Add, Custom, x16 y324 w480 h64 gBuildSelectOK vBuildSelectBtn ClassButton +0x200E +Disabled, %text_BuildSelectAction%`n%text_BuildSelectActionSub%
+Gui Add, ListBox, x24 y117 w464 h194 +0x100 +AltSubmit +Disabled vBuildSelect
+Gui Add, Custom, x16 y328 w480 h64 gBuildSelectOK vBuildSelectBtn ClassButton +0x200E +Disabled, %text_BuildSelectAction%`n%text_BuildSelectActionSub%
 
 ;Language, edition, destination location controls
 Gui Font, s10 q5
 Gui Add, GroupBox, x16 y60 w480 h60 vGuiBuildSelectionGroupBox, %text_SelectedBuild%
-Gui Add, GroupBox, x16 y132 w480 h80 vGuiLanguageEditionGroupBox, %text_LanguageAndEdition%
-Gui Add, GroupBox, x16 y226 w480 h88 vGuiSaveOptionsGroupBox, %text_SaveOptions%
+Gui Add, GroupBox, x16 y128 w480 h96 vGuiLanguageEditionGroupBox, %text_LanguageAndEdition%
+Gui Add, GroupBox, x16 y232 w480 h88 vGuiSaveOptionsGroupBox, %text_SaveOptions%
 Gui Font, s9 q5
 Gui Add, Edit, x24 y85 w376 +ReadOnly vSelectedBuildText
 Gui Add, Button, x408 y84 w80 h25 gChangeToBuildSearchControls vChangeBuildButton, %text_Change%
-Gui Add, Text, x24 y154 w224 r1 vGuiLanguageLabel, %text_Language%
-Gui Add, DropDownList, x24 y175 w224 +AltSubmit +Disabled vLangSelect gLangSelected
-Gui Add, Text, x264 y154 w224 r1 vGuiEditionLabel, %text_Edition%
-Gui Add, DropDownList, x264 y175 w224 +AltSubmit +Disabled vEditionSelect gEditionSelected
-Gui Add, Edit, x24 y251 w376 h22 vDestinationLocation, %DefaultDir%
-Gui Add, Button, x408 y250 w80 h24 gFindFolder vGuiBrowseButton, %text_Browse%
-Gui Add, Checkbox, x24 y278 w224 h32 vProcessSaveUUP gChangeStateOfSkipConversionButton, %text_SaveUUPFiles%
-Gui Add, Checkbox, x264 y278 w224 h32 vProcessSkipConversion +Disabled, %text_SkipConversion%
-Gui Add, Custom, x16 y324 w480 h64 ClassButton +0x200E gStartProcess vStartProcessBtn +Disabled, %text_StartProcess%`n%text_StartProcessSub%
+Gui Add, Text, x24 y150 w224 r1 vGuiLanguageLabel, %text_Language%
+Gui Add, DropDownList, x24 y171 w224 +AltSubmit +Disabled vLangSelect gLangSelected
+Gui Add, Text, x264 y150 w224 r1 vGuiEditionLabel, %text_Edition%
+Gui Add, DropDownList, x264 y171 w224 +AltSubmit +Disabled vEditionSelect gEditionSelected
+Gui Add, Link, x24 y200 w464 r1 vLearnMoreAllEditionsPlus gLearnMoreAllEditionsPlus, <a>%text_LearnMoreAllEditionsPlus%</a>
+Gui Add, Edit, x24 y257 w376 h22 vDestinationLocation, %DefaultDir%
+Gui Add, Button, x408 y256 w80 h24 gFindFolder vGuiBrowseButton, %text_Browse%
+Gui Add, Checkbox, x24 y284 w224 h32 vProcessSaveUUP gChangeStateOfSkipConversionButton, %text_SaveUUPFiles%
+Gui Add, Checkbox, x264 y284 w224 h32 vProcessSkipConversion +Disabled, %text_SkipConversion%
+Gui Add, Custom, x16 y328 w480 h64 ClassButton +0x200E gStartProcess vStartProcessBtn +Disabled, %text_StartProcess%`n%text_StartProcessSub%
 
 ;Information text
-Gui Add, Text, x0 y398 w515 h1 +0x10
-Gui Add, Picture, x4 y404 w16 h16 Icon5, user32.dll
-Gui Add, Link, x24 y404 w480 r1 vBottomInformationText gBottomInformationAction, %text_PleaseSelectBuild%
+Gui Add, Text, x0 y400 w515 h1 +0x10
+Gui Add, Picture, x4 y406 w16 h16 Icon5, user32.dll
+Gui Add, Link, x24 y406 w480 r1 vBottomInformationText gBottomInformationAction, %text_PleaseSelectBuild%
 
 If(InStr(A_OSVersion, "10.0")) {
     OnMessage(0x320, "DWMColorChangedEvent")
@@ -148,7 +149,7 @@ Gui, -Disabled
 
 GuiControl, , AppInfo, %text_PoweredBy% UUP dump API v%APIVersion%
 GuiControl, Focus, BuildSearchQuery
-Gui Show, w512 h424, %AppName%
+Gui Show, w512 h426, %AppName%
 Return
 
 HideAllControls:
@@ -163,6 +164,7 @@ HideAllControls:
     GuiControl, Hide, LangSelect
     GuiControl, Hide, GuiEditionLabel
     GuiControl, Hide, EditionSelect
+    GuiControl, Hide, LearnMoreAllEditionsPlus
     GuiControl, Hide, GuiBuildSelectionGroupBox
     GuiControl, Hide, GuiLanguageEditionGroupBox
     GuiControl, Hide, GuiSaveOptionsGroupBox
@@ -191,6 +193,7 @@ ChangeToConfigControls:
     GuiControl, Show, LangSelect
     GuiControl, Show, GuiEditionLabel
     GuiControl, Show, EditionSelect
+    GuiControl, Show, LearnMoreAllEditionsPlus
     GuiControl, Show, GuiBuildSelectionGroupBox
     GuiControl, Show, GuiLanguageEditionGroupBox
     GuiControl, Show, GuiSaveOptionsGroupBox
@@ -226,7 +229,7 @@ PrepareEnv:
 
     SplashImage, %A_ScriptDir%\files\splash.png, ZX52 ZY12 WM400 FM11 FS9 CWFFFFFF AM, 0`%, %text_Preparing% , %AppName%, Segoe UI
     FileCopyDir, %A_ScriptDir%\files\workdir, %WorkDir%, 1
-    RunWait, %A_ScriptDir%\files\7za.exe x "%A_ScriptDir%\files\converter.7z", %WorkDir%, Hide
+    FileCopyDir, %A_ScriptDir%\files\converter, %WorkDir%, 1
 
     RunWait, %A_ScriptDir%\files\php\php.exe -c "%A_ScriptDir%\files\php\php.ini" -r "die(0);", %WorkDir%, UseErrorLevel Hide
     if ErrorLevel <> 0
@@ -331,7 +334,17 @@ EditionSelected:
     GuiControl, Disable, StartProcessBtn
     GuiControl,, BottomInformationText, %text_PleaseWait%
 
-    SelectedEdition := EditionCodes[EditionSelect]
+    SelEdition := EditionCodes[EditionSelect]
+
+    If(SelEdition == "AllEditionsPlus")
+    {
+        SelectedEdition := 0
+        CreateAllEditions := 1
+    } else {
+        SelectedEdition := SelEdition
+        CreateAllEditions := 0
+    }
+
     FilesSize := GetFilesSize(SelectedBuild, SelectedLang, SelectedEdition)
 
     UpdatesList := UrlGet("http://127.0.0.1:" PhpPort "/getlist.php?id=" SelectedBuild "&pack=" SelectedLang "&edition=updateOnly", "GET")
@@ -407,17 +420,50 @@ StartProcess:
     SetTimer, UpdateProgressOfGetProgress, Off
     Gui ProgressOfGet: Destroy
 
+    If(FileExist("converter_config.txt"))
+    {
+        FileDelete, converter_config.txt
+    }
+
+    FileAppend, AutoStart=1`n, converter_config.txt
+    FileAppend, AddUpdates=1`n, converter_config.txt
+    If(CreateAllEditions == 1)
+    {
+        FileAppend, SkipISO=1`n, converter_config.txt
+    }
+
     RunWait, %CmdPath% /c %DownloadScript% %SpeedLimit%
 
-    if ErrorLevel <> 0
+    If ErrorLevel <> 0
     {
         Progress, Off
-        Instruction := text_CommandPromptClosed
-        Content := text_CommandPromptClosedQuestion
+        MsgBox, 36, %AppName%, %text_CommandPromptClosed%`n`n%text_CommandPromptClosedQuestion%
 
-        Result := TaskDialog(Instruction, Content, AppName, 0x6, 0xFFFD)
+        IfMsgBox Yes
+        {
+            Gosub, StartProcess
+            Return
+        }
 
-        If (Result == "Yes") {
+        Gosub, KillApplication
+        Return
+    }
+
+    If(CreateAllEditions == 1)
+    {
+        FileDelete, converter_config.txt
+        FileAppend, AutoStart=1`n, converter_config.txt
+        FileAppend, AutoEditions=Enterprise`,Education`,ProfessionalEducation`,ProfessionalWorkstation`,EnterpriseN`,EducationN`,ProfessionalEducationN`,ProfessionalWorkstationN`,CoreSingleLanguage`,ServerRdsh`n, converter_config.txt
+        RunWait, %CmdPath% /c create_virtual_editions.cmd auto
+    }
+
+    If ErrorLevel <> 0
+    {
+        Progress, Off
+        MsgBox, 36, %AppName%, %text_CommandPromptClosed%`n`n%text_CommandPromptClosedQuestion%
+
+        IfMsgBox Yes
+        {
             Gosub, StartProcess
             Return
         }
@@ -457,10 +503,7 @@ StartProcess:
             MoveFileToLocation(NewUupDir, A_LoopFileFullPath)
     }
 
-    Instruction := text_Information
-    Content := text_TaskCompleted
-
-    TaskDialog(Instruction, Content, AppName, 0x1, 0xFFFD)
+    MsgBox, 64, %AppName%, %text_TaskCompleted%
     Gosub, KillApplication
 Return
 
@@ -525,6 +568,10 @@ BottomInformationAction:
     {
         MsgBox, 48, %AppName%, %text_UpdatesIncludedInfo1%:`n%UpdatesList%`n%text_UpdatesIncludedInfo2%
     }
+Return
+
+LearnMoreAllEditionsPlus:
+    MsgBox, 64, %AppName%, %text_LearnMoreAllEditionsPlusContents%
 Return
 
 #If WinActive("ahk_pid " CurrentPid)
