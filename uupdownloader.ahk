@@ -104,37 +104,38 @@ Gui Add, Text, x16 y31 w480 r1 BackgroundTrans vAppInfo, %text_PrepareToWork%
 Gui Font
 Gui Font, s9 q5, Segoe UI
 
+;Information text
+Gui Add, Text, x0 y400 w515 h1 +0x10
+Gui Add, Picture, x4 y406 w16 h16 Icon5, user32.dll
+Gui Add, Link, x24 y406 w480 r1 vBottomInformationText gBottomInformationAction, %text_PleaseSelectBuild%
+
 ;Build search controls
 Gui Font, s10 q5
-Gui Add, GroupBox, x16 y60 w480 h254 vGuiSearchGroupBox, %text_SearchBuilds%
+Gui Add, GroupBox, x16 y60 w480 h260 vGuiSearchGroupBox, %text_SearchBuilds%
 Gui Font, s9 q5
 Gui Add, Edit, x24 y85 w376 vBuildSearchQuery
 Gui Add, Button, x408 y84 w80 h25 gSearchBuilds vGuiSearchButton +Default, %text_Search%
-Gui Add, ListBox, x24 y120 w464 h184 +0x100 +AltSubmit +Disabled vBuildSelect
-Gui Add, Custom, x16 y324 w480 h64 gBuildSelectOK vBuildSelectBtn ClassButton +0x200E +Disabled, %text_BuildSelectAction%`n%text_BuildSelectActionSub%
+Gui Add, ListBox, x24 y117 w464 h194 +0x100 +AltSubmit +Disabled vBuildSelect
+Gui Add, Custom, x16 y328 w480 h64 gBuildSelectOK vBuildSelectBtn ClassButton +0x200E +Disabled, %text_BuildSelectAction%`n%text_BuildSelectActionSub%
 
 ;Language, edition, destination location controls
 Gui Font, s10 q5
 Gui Add, GroupBox, x16 y60 w480 h60 vGuiBuildSelectionGroupBox, %text_SelectedBuild%
-Gui Add, GroupBox, x16 y132 w480 h80 vGuiLanguageEditionGroupBox, %text_LanguageAndEdition%
-Gui Add, GroupBox, x16 y226 w480 h88 vGuiSaveOptionsGroupBox, %text_SaveOptions%
+Gui Add, GroupBox, x16 y128 w480 h96 vGuiLanguageEditionGroupBox, %text_LanguageAndEdition%
+Gui Add, GroupBox, x16 y232 w480 h88 vGuiSaveOptionsGroupBox, %text_SaveOptions%
 Gui Font, s9 q5
 Gui Add, Edit, x24 y85 w376 +ReadOnly vSelectedBuildText
 Gui Add, Button, x408 y84 w80 h25 gChangeToBuildSearchControls vChangeBuildButton, %text_Change%
-Gui Add, Text, x24 y154 w224 r1 vGuiLanguageLabel, %text_Language%
-Gui Add, DropDownList, x24 y175 w224 +AltSubmit +Disabled vLangSelect gLangSelected
-Gui Add, Text, x264 y154 w224 r1 vGuiEditionLabel, %text_Edition%
-Gui Add, DropDownList, x264 y175 w224 +AltSubmit +Disabled vEditionSelect gEditionSelected
-Gui Add, Edit, x24 y251 w376 h22 vDestinationLocation, %DefaultDir%
-Gui Add, Button, x408 y250 w80 h24 gFindFolder vGuiBrowseButton, %text_Browse%
-Gui Add, Checkbox, x24 y278 w224 h32 vProcessSaveUUP gChangeStateOfSkipConversionButton, %text_SaveUUPFiles%
-Gui Add, Checkbox, x264 y278 w224 h32 vProcessSkipConversion +Disabled, %text_SkipConversion%
-Gui Add, Custom, x16 y324 w480 h64 ClassButton +0x200E gStartProcess vStartProcessBtn +Disabled, %text_StartProcess%`n%text_StartProcessSub%
-
-;Information text
-Gui Add, Text, x0 y398 w515 h1 +0x10
-Gui Add, Picture, x4 y404 w16 h16 Icon5, user32.dll
-Gui Add, Link, x24 y404 w480 r1 vBottomInformationText gBottomInformationAction, %text_PleaseSelectBuild%
+Gui Add, Text, x24 y150 w224 r1 vGuiLanguageLabel, %text_Language%
+Gui Add, DropDownList, x24 y171 w224 +AltSubmit +Disabled vLangSelect gLangSelected
+Gui Add, Text, x264 y150 w224 r1 vGuiEditionLabel, %text_Edition%
+Gui Add, DropDownList, x264 y171 w224 +AltSubmit +Disabled vEditionSelect gEditionSelected
+Gui Add, Checkbox, x24 y200 w464 r1 vCreateVirtualEditions gCreateVirtualEditionsClicked, %text_CreateVirtualEditions%
+Gui Add, Edit, x24 y257 w376 h22 vDestinationLocation, %DefaultDir%
+Gui Add, Button, x408 y256 w80 h24 gFindFolder vGuiBrowseButton, %text_Browse%
+Gui Add, Checkbox, x24 y284 w224 h32 vProcessSaveUUP gChangeStateOfSkipConversionButton, %text_SaveUUPFiles%
+Gui Add, Checkbox, x264 y284 w224 h32 vProcessSkipConversion +Disabled, %text_SkipConversion%
+Gui Add, Custom, x16 y328 w480 h64 ClassButton +0x200E gStartProcess vStartProcessBtn +Disabled, %text_StartProcess%`n%text_StartProcessSub%
 
 If(InStr(A_OSVersion, "10.0")) {
     OnMessage(0x320, "DWMColorChangedEvent")
@@ -148,7 +149,7 @@ Gui, -Disabled
 
 GuiControl, , AppInfo, %text_PoweredBy% UUP dump API v%APIVersion%
 GuiControl, Focus, BuildSearchQuery
-Gui Show, w512 h424, %AppName%
+Gui Show, w512 h426, %AppName%
 Return
 
 HideAllControls:
@@ -163,6 +164,7 @@ HideAllControls:
     GuiControl, Hide, LangSelect
     GuiControl, Hide, GuiEditionLabel
     GuiControl, Hide, EditionSelect
+    GuiControl, Hide, CreateVirtualEditions
     GuiControl, Hide, GuiBuildSelectionGroupBox
     GuiControl, Hide, GuiLanguageEditionGroupBox
     GuiControl, Hide, GuiSaveOptionsGroupBox
@@ -191,6 +193,7 @@ ChangeToConfigControls:
     GuiControl, Show, LangSelect
     GuiControl, Show, GuiEditionLabel
     GuiControl, Show, EditionSelect
+    GuiControl, Show, CreateVirtualEditions
     GuiControl, Show, GuiBuildSelectionGroupBox
     GuiControl, Show, GuiLanguageEditionGroupBox
     GuiControl, Show, GuiSaveOptionsGroupBox
@@ -361,6 +364,30 @@ ChangeStateOfSkipConversionButton:
         GuiControl, Disable, ProcessSkipConversion
         Gui, Submit, NoHide
     }
+Return
+
+CreateVirtualEditionsClicked:
+    GuiControl,, CreateVirtualEditions, 0
+    MsgBox, 48, %A_Space%, Not implemented yet
+    Return
+
+    Gui, Submit, NoHide
+    If(CreateVirtualEditions == 0)
+        Return
+
+    SupportedForVE := CheckADK()
+    If(!SupportedForVE)
+    {
+        GuiControl,, CreateVirtualEditions, 0
+        MsgBox, 16, %text_Error%, %text_NotSupportedForVECreation%
+        Return
+    }
+
+    MsgBox, 36, %AppName%, %text_CreateVirtualEditionsNotice%
+    IfMsgBox, Yes
+        Return
+
+    GuiControl,, CreateVirtualEditions, 0
 Return
 
 StartProcess:

@@ -373,6 +373,23 @@ MoveFileToLocation(Dest, File) {
     FileMove, %File%, %NewFile%
 }
 
+CheckADK() {
+    return 0
+    if A_OSVersion in WIN_7,WIN_8,WIN_8.1
+    {
+        RegRead, KitsRootWow, HKLM\Software\Wow6432Node\Microsoft\Windows Kits\Installed Roots, KitsRoot10
+        RegRead, KitsRoot, HKLM\Software\Microsoft\Windows Kits\Installed Roots, KitsRoot10
+
+        if (KitsRoot == "" && KitsRootWow == "")
+        {
+            return 0
+        } else {
+            return 1
+        }
+    }
+    return 1
+}
+
 GetCurrentSystemColor() {
     If(InStr(A_OSVersion, "10.0")) {
         RegRead, Color, HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Accent, AccentPalette
