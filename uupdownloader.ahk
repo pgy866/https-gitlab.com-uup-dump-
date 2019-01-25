@@ -318,6 +318,7 @@ LangSelected:
     GuiControl, Disable, StartProcessBtn
     GuiControl,, BottomInformationText, %text_PleaseWait%
 
+    OldLangSelect := LangSelect
     SelectedLang := LangCodes[LangSelect]
     EditionCodes := PopulateEditionList(SelectedBuild, SelectedLang)
 
@@ -326,6 +327,13 @@ LangSelected:
 
     if EditionCodes != 0
         Gosub, EditionSelected
+
+    Gui, Submit, NoHide
+    If(OldLangSelect <> LangSelect)
+    {
+        Gosub, LangSelected
+        Return
+    }
 Return
 
 EditionSelected:
@@ -334,6 +342,7 @@ EditionSelected:
     GuiControl, Disable, StartProcessBtn
     GuiControl,, BottomInformationText, %text_PleaseWait%
 
+    OldEditionSelect := EditionSelect
     SelectedEdition := EditionCodes[EditionSelect]
     FilesSize := GetFilesSize(SelectedBuild, SelectedLang, SelectedEdition)
 
@@ -347,6 +356,13 @@ EditionSelected:
         GuiControl,, BottomInformationText, %text_DownloadSize%: %FilesSize% <a id="ShowIncludedUpdatesList">%text_ContainsAdditionalUpdates%</a>
     } else {
         GuiControl,, BottomInformationText, %text_DownloadSize%: %FilesSize%
+    }
+
+    Gui, Submit, NoHide
+    If(OldEditionSelect <> EditionSelect)
+    {
+        Gosub, EditionSelected
+        Return
     }
 
     GuiControl, Enable, ChangeBuildButton
@@ -367,10 +383,6 @@ ChangeStateOfSkipConversionButton:
 Return
 
 CreateVirtualEditionsClicked:
-    GuiControl,, CreateVirtualEditions, 0
-    MsgBox, 48, %A_Space%, Not implemented yet
-    Return
-
     Gui, Submit, NoHide
     If(CreateVirtualEditions == 0)
         Return
@@ -434,22 +446,31 @@ StartProcess:
     SetTimer, UpdateProgressOfGetProgress, Off
     Gui ProgressOfGet: Destroy
 
+    IniWrite, 1, ConvertConfig.ini, convert-UUP, AutoStart
+    IniWrite, %CreateVirtualEditions%, ConvertConfig.ini, convert-UUP, StartVirtual
+    IniWrite, 1, ConvertConfig.ini, create_virtual_editions, vAutoStart
+    IniWrite, Enterprise`,Education`,ProfessionalEducation`,ProfessionalWorkstation`,EnterpriseN`,EducationN`,ProfessionalEducationN`,ProfessionalWorkstationN`,CoreSingleLanguage`,ServerRdsh, ConvertConfig.ini, create_virtual_editions, vAutoEditions
+
     RunWait, %CmdPath% /c %DownloadScript% %SpeedLimit%
 
     if ErrorLevel <> 0
     {
         Progress, Off
-        Instruction := text_CommandPromptClosed
-        Content := text_CommandPromptClosedQuestion
+        Gui, Show
+        Gui, +OwnDialogs
+        Gui, +Disabled
 
-        Result := TaskDialog(Instruction, Content, AppName, 0x6, 0xFFFD)
-
-        If (Result == "Yes") {
+        MsgBox, 52, %AppName%, %text_CommandPromptClosed%`n`n%text_CommandPromptClosedQuestion%
+        IfMsgBox Yes
+        {
             Gosub, StartProcess
             Return
         }
 
-        Gosub, KillApplication
+        Gui, -Disabled
+        FileRemoveDir, %WorkDir%\UUPs, 1
+        FileCreateDir, %WorkDir%\UUPs
+
         Return
     }
 
@@ -484,10 +505,7 @@ StartProcess:
             MoveFileToLocation(NewUupDir, A_LoopFileFullPath)
     }
 
-    Instruction := text_Information
-    Content := text_TaskCompleted
-
-    TaskDialog(Instruction, Content, AppName, 0x1, 0xFFFD)
+    MsgBox, 64, %AppName%, %text_TaskCompleted%
     Gosub, KillApplication
 Return
 
