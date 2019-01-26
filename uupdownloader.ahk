@@ -1,17 +1,12 @@
 ﻿#Include %A_ScriptDir%\include\header.ahk
 #Include %A_ScriptDir%\include\appinfo.ahk
 
-If(ReleaseType == 0)
-{
+If(ReleaseType == 0) {
     VersionCheckSnippet = 1792654
-}
-else If(ReleaseType == 1)
-{
+} else If(ReleaseType == 1) {
 
     VersionCheckSnippet = 1792655
-}
-else
-{
+} else {
 
     VersionCheckSnippet = 1798502
 }
@@ -20,7 +15,7 @@ VersionCheckUrl = https://gitlab.com/uup-dump/downloader/snippets/%VersionCheckS
 
 If(A_IsCompiled)
 {
-    MsgBox, 16, Unsupported build, The application was built in unsupported way. Please read build instructions in readme.`n`nThe application will be terminated.
+    MsgBox, 0x10, Unsupported build, The application was built in unsupported way. Please read build instructions in readme.`n`nThe application will be terminated.
     ExitApp
 }
 
@@ -42,13 +37,13 @@ Gui, +OwnDialogs
 
 if A_IsAdmin = 0
 {
-    MsgBox, 16, %AppName%, %text_NoAdmin%
+    MsgBox, 0x10, %AppName%, %text_NoAdmin%
     ExitApp
 }
 
 if A_OSVersion in WIN_NT4,WIN_95,WIN_98,WIN_ME,WIN_2000,WIN_XP,WIN_2003,WIN_VISTA
 {
-    MsgBox, 16, %AppName%, %text_UnsupportedSystem%
+    MsgBox, 0x10, %AppName%, %text_UnsupportedSystem%
     ExitApp
 }
 
@@ -234,7 +229,7 @@ PrepareEnv:
     RunWait, %A_ScriptDir%\files\php\php.exe -c "%A_ScriptDir%\files\php\php.ini" -r "die(0);", %WorkDir%, UseErrorLevel Hide
     if ErrorLevel <> 0
     {
-        MsgBox, 16, %text_Error%, %text_BackendTestFailed%
+        MsgBox, 0x10, %text_Error%, %text_BackendTestFailed%
         gosub, KillApplication
     }
 
@@ -384,6 +379,7 @@ Return
 
 CreateVirtualEditionsClicked:
     Gui, Submit, NoHide
+    Gui, +OwnDialogs
     If(CreateVirtualEditions == 0)
         Return
 
@@ -391,11 +387,11 @@ CreateVirtualEditionsClicked:
     If(!SupportedForVE)
     {
         GuiControl,, CreateVirtualEditions, 0
-        MsgBox, 16, %text_Error%, %text_NotSupportedForVECreation%
+        MsgBoxLock(0x10, text_Error, text_NotSupportedForVECreation)
         Return
     }
 
-    MsgBox, 36, %AppName%, %text_CreateVirtualEditionsNotice%
+    MsgBoxLock(0x124, AppName, text_CreateVirtualEditionsNotice)
     IfMsgBox, Yes
         Return
 
@@ -414,7 +410,7 @@ StartProcess:
 
     IfNotExist, %DestinationLocation%
     {
-        MsgBox, 16, %text_Error%, %text_DestinationLocationNotExists%
+        MsgBoxLock(0x10, text_Error, text_DestinationLocationNotExists)
         Return
     }
 
@@ -432,7 +428,7 @@ StartProcess:
     if(AriaScript == "ERROR")
     {
         Gui ProgressOfGet: Destroy
-        MsgBox, 16, %text_Error%, %text_BuildNotDownloadable%
+        MsgBox, 0x10, %text_Error%, %text_BuildNotDownloadable%
         Gui, -Disabled
         Gui, Show
         Return
@@ -447,6 +443,7 @@ StartProcess:
     Gui ProgressOfGet: Destroy
 
     IniWrite, 1, ConvertConfig.ini, convert-UUP, AutoStart
+    IniWrite, 1, ConvertConfig.ini, convert-UUP, AddUpdates
     IniWrite, %CreateVirtualEditions%, ConvertConfig.ini, convert-UUP, StartVirtual
     IniWrite, 1, ConvertConfig.ini, create_virtual_editions, vAutoStart
     IniWrite, Enterprise`,Education`,ProfessionalEducation`,ProfessionalWorkstation`,EnterpriseN`,EducationN`,ProfessionalEducationN`,ProfessionalWorkstationN`,CoreSingleLanguage`,ServerRdsh, ConvertConfig.ini, create_virtual_editions, vAutoEditions
@@ -457,10 +454,8 @@ StartProcess:
     {
         Progress, Off
         Gui, Show
-        Gui, +OwnDialogs
-        Gui, +Disabled
 
-        MsgBox, 52, %AppName%, %text_CommandPromptClosed%`n`n%text_CommandPromptClosedQuestion%
+        MsgBoxLock(0x34, AppName, text_CommandPromptClosed "`n`n" text_CommandPromptClosedQuestion)
         IfMsgBox Yes
         {
             Gosub, StartProcess
@@ -468,8 +463,7 @@ StartProcess:
         }
 
         Gui, -Disabled
-        FileRemoveDir, %WorkDir%\UUPs, 1
-        FileCreateDir, %WorkDir%\UUPs
+        CleanupForNewDownload()
 
         Return
     }
@@ -505,7 +499,15 @@ StartProcess:
             MoveFileToLocation(NewUupDir, A_LoopFileFullPath)
     }
 
-    MsgBox, 64, %AppName%, %text_TaskCompleted%
+    Gui, Show
+    MsgBoxLock(0x144, AppName, text_TaskCompleted "`n`n" text_DoYouWantAnotherBuild)
+    IfMsgBox, Yes
+    {
+        Gosub, ChangeToBuildSearchControls
+        CleanupForNewDownload()
+        Return
+    }
+
     Gosub, KillApplication
 Return
 
@@ -520,7 +522,7 @@ MonitorPhp:
 
         If(%ErrorLevel% == 0)
         {
-            MsgBox, 16, %text_Error%, %text_PhpFailedRestart%
+            MsgBox, 0x10, %text_Error%, %text_PhpFailedRestart%
             Gosub KillApplication
             Return
         }
@@ -551,7 +553,7 @@ KillApplication:
 
     If(ProcessKilled = 0 && PhpWasRunning)
     {
-        MsgBox, 16, %text_Error%, %text_PhpFailedClose%
+        MsgBox, 0x10, %text_Error%, %text_PhpFailedClose%
     }
 
     FileRemoveDir, %WorkDir%, 1
@@ -567,15 +569,13 @@ Return
 
 BottomInformationAction:
     If(ErrorLevel == "ShowIncludedUpdatesList")
-    {
-        MsgBox, 48, %AppName%, %text_UpdatesIncludedInfo1%:`n%UpdatesList%`n%text_UpdatesIncludedInfo2%
-    }
+        MsgBoxLock(0x30, AppName, text_UpdatesIncludedInfo1 ":`n" UpdatesList "`n" text_UpdatesIncludedInfo2)
 Return
 
 #If WinActive("ahk_pid " CurrentPid)
 !D::
     if(!FileExist(WorkDir)) {
-        MsgBox, 16, %text_Error%, %text_WorkDirNotCreatedYet%
+        MsgBox, 0x10, %text_Error%, %text_WorkDirNotCreatedYet%
         Return
     }
     Run, %A_WinDir%\Explorer.exe %WorkDir%

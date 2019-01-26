@@ -59,6 +59,7 @@ Translation["ContainsAdditionalUpdates"] := "(contains additional updates)"
 Translation["CreateVirtualEditions"] := "Create virtual editions"
 Translation["CreateVirtualEditionsNotice"] := "This option enables creation of all possible virtual editions from selected base edition(s). The creation process takes a lot of time to complete.`n`nAre you sure you want to enable this option?"
 Translation["NotSupportedForVECreation"] := "This option requires Windows 10 ADK to be installed or the application to be run on Windows 10."
+Translation["DoYouWantAnotherBuild"] := "Would you like to download an another build?"
 
 Languages := []
 Languages["ar-sa"] := "Arabic (Saudi Arabia)"

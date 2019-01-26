@@ -373,6 +373,14 @@ MoveFileToLocation(Dest, File) {
     FileMove, %File%, %NewFile%
 }
 
+CleanupForNewDownload() {
+    Global WorkDir
+
+    FileRemoveDir, %WorkDir%\UUPs, 1
+    FileCreateDir, %WorkDir%\UUPs
+    FileDelete, %WorkDir%\*.ISO
+}
+
 CheckADK() {
     if A_OSVersion in WIN_7,WIN_8,WIN_8.1
     {
@@ -410,6 +418,12 @@ DWMColorChangedEvent() {
     GuiControl,, AppNameText, %AppName%
     GuiControl, +Redraw, AppNameText
     Gui Font, s9 q5
+}
+
+MsgBoxLock(Options, Title, Text) {
+    Gui, +OwnDialogs +Disabled
+    MsgBox, % Options, % Title, % Text
+    Gui, -Disabled
 }
 
 UrlGet(URL, Method) {
