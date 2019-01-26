@@ -17,7 +17,7 @@ Possible values:
 1 - Testing release (alpha, beta, rc)
 2 - Continous Integration (untested versions)
 */
-ReleaseType = 2
+ReleaseType = 1
 
 ;These values are there only, because they need to be used by build script
 AppFileName = uupdownloader_%Version%
