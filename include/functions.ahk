@@ -147,13 +147,13 @@ PopulateBuildList(Response, Search = "") {
 
     if (BuildList == "" && Search == "")
     {
-        MsgBox, 16, %text_Error%, %text_CannotGetBuilds%
+        MsgBoxLock(16, text_Error, text_CannotGetBuilds)
         Gosub, KillApplication
     }
 
     if (BuildList == "")
     {
-        MsgBox, 16, %text_Error%, %text_NoSearchResults%
+        MsgBoxLock(16, text_Error, text_NoSearchResults)
         Return
     }
 
@@ -226,7 +226,8 @@ PopulateLangList(SelectedBuild) {
 
     if(LangList = "")
     {
-        MsgBox, 16, %text_Error%, %text_NoLanguages%
+        GuiControl,, BottomInformationText, %text_NoLanguages%
+        MsgBoxLock(16, text_Error, text_NoLanguages)
         Return 0
     }
 
@@ -269,7 +270,8 @@ PopulateEditionList(SelectedBuild, Lang) {
 
     if EditionList =
     {
-        MsgBox, 16, %text_Error%, %text_NoEditions%
+        GuiControl,, BottomInformationText, %text_NoEditions%
+        MsgBoxLock(16, text_Error, text_NoEditions)
         Return 0
     }
 
