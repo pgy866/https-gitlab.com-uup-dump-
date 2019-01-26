@@ -344,12 +344,14 @@ EditionSelected:
     UpdatesList := UrlGet("http://127.0.0.1:" PhpPort "/getlist.php?id=" SelectedBuild "&pack=" SelectedLang "&edition=updateOnly", "GET")
     If(UpdatesList != "ERROR")
     {
+        UpdatesWillBeIntegrated := 1
         UpdatesList := RegExReplace(UpdatesList, "`n", "`r`n")
         UpdatesList := RegExReplace(UpdatesList, "\|.*")
         UpdatesList := RegExReplace(UpdatesList, "(.+)`r`n", " - $1`r`n")
 
         GuiControl,, BottomInformationText, %text_DownloadSize%: %FilesSize% <a id="ShowIncludedUpdatesList">%text_ContainsAdditionalUpdates%</a>
     } else {
+        UpdatesWillBeIntegrated := 0
         GuiControl,, BottomInformationText, %text_DownloadSize%: %FilesSize%
     }
 
@@ -403,6 +405,13 @@ StartProcess:
         Return
 
     Gui Submit, NoHide
+
+    ADKSupported := CheckADK()
+    If(!ADKSupported && !ProcessSkipConversion && UpdatesWillBeIntegrated) {
+        MsgBoxLock(0x144, AppName, text_NoADK)
+        IfMsgBox, No
+            Return
+    }
 
     DownloadScript = "%WorkDir%\aria2_download.cmd"
     if ProcessSkipConversion = 1
