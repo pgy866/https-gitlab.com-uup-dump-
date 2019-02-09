@@ -105,7 +105,7 @@ PopulateBuildList(Response, Search = "") {
     Global text_Error, text_CannotGetBuilds, text_NoSearchResults
     Global BuildNames, BuildNumbers, BuildArchs
 
-    Response := RegExReplace(Response, "i)Cumulative Update for ", "Update to ")
+    Response := RegExReplace(Response, "i)Cumulative ", "")
     Response := RegExReplace(Response, "i)Version Next", "Insider Preview")
 
     Search := RegExReplace(Search, "([\/\\+\*\?\[\^\]\$\(\)\{\}\=\!\<\>\|\:\-])", "\$1")
