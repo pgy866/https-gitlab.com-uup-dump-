@@ -1,4 +1,4 @@
-version: 1.2.2-test+ci.{build}
+version: 1.2.2+ci.{build}
 skip_tags: true
 image: Visual Studio 2015
 

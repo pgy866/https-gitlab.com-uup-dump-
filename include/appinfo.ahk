@@ -5,7 +5,7 @@ script.
 
 AppNameOnly = UUP dump downloader
 CompanyName = UUP dump authors
-Version     = 1.2.2-test
+Version     = 1.2.2
 VersionExe  = 1,2,2,0
 
 /*
@@ -17,7 +17,7 @@ Possible values:
 1 - Testing release (alpha, beta, rc)
 2 - Continous Integration (untested versions)
 */
-ReleaseType = 2
+ReleaseType = 0
 
 ;These values are there only, because they need to be used by build script
 AppFileName = uupdownloader_%Version%

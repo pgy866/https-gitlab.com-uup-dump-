@@ -280,7 +280,6 @@ BuildSelectOK:
         Return
 
     Gui Submit, NoHide
-    Gosub ChangeToConfigControls
     GuiControl,, BottomInformationText, %text_PleaseWait%
 
     GuiControl, Disable, ChangeBuildButton
@@ -292,6 +291,17 @@ BuildSelectOK:
     BuildArch := BuildArchs[BuildSelect]
     BuildNumber := BuildNumbers[BuildSelect]
     GuiControl, , SelectedBuildText, %BuildName%
+
+    BuildMajor := StrSplit(BuildNumber, ".")
+    BuildMajor := Format("{:i}", BuildMajor[1])
+
+    If(BuildMajor < 17107) {
+        GuiControl, Disable, CreateVirtualEditions
+    } else {
+        GuiControl, Enable, CreateVirtualEditions
+    }
+
+    Gosub ChangeToConfigControls
 
     SelectedBuild := BuildIDs[BuildSelect]
     if(GetFileInfoForUpdate(SelectedBuild) = 0)
