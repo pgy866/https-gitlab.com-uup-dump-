@@ -5,8 +5,8 @@ script.
 
 AppNameOnly = UUP dump downloader
 CompanyName = UUP dump authors
-Version     = 1.2.2
-VersionExe  = 1,2,2,0
+Version     = 1.2.3
+VersionExe  = 1,2,3,0
 
 /*
 Release type determines update check URL and if build metadata is shown in
